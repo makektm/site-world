@@ -62,3 +62,20 @@ export * from "./doom/doomStore";
 export * from "./doom/doomWorld";
 export * from "./doom/markArt";
 export * from "./doom/simpleWorld";
+
+// Interaction kit: selection, inspector, layers, go-to, follow, tours, timeline, blast radius
+export * from "./kit/GoToPalette";
+export * from "./kit/InspectPanel";
+export * from "./kit/LayerBar";
+export * from "./kit/Selectable";
+export * from "./kit/TimelineScrubber";
+export * from "./kit/TourCaption";
+export * from "./kit/blastRadius";
+export * from "./kit/fuzzy";
+export * from "./kit/goal";
+export * from "./kit/layers";
+export * from "./kit/selection";
+export * from "./kit/timeline";
+export * from "./kit/tour";
+export * from "./kit/useFollow";
+export * from "./kit/useKeydown";

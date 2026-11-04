@@ -76,3 +76,10 @@ export * from "./kit/PresenceMarker";
 export * from "./kit/agentPath";
 export * from "./kit/agentState";
 export * from "./kit/crowdLayout";
+
+// Factory floor: belts, stations, crates of work, and the line that composes them
+export * from "./kit/Conveyor";
+export * from "./kit/Crate";
+export * from "./kit/Station";
+export * from "./kit/WorkLine";
+export * from "./kit/workLineLayout";

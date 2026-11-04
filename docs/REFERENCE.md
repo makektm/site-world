@@ -630,3 +630,58 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `crowdLayout` | function | Where each member should stand, by id: unchanged when alone, spread on rings when sharing a spot. |
 | `fanOut` | function | Offsets [dx, dz] for `n` figures round a centre, every pair at least `spacing` apart. |
 | `useCrowdLayout` | function | `crowdLayout`, memoised on the members' ids and spots rather than on the array's identity. |
+
+### `kit/Conveyor`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `ConveyorProps` | interface |  |
+| `Conveyor` | function | A conveyor belt along a straight or polyline path, its surface sliding downstream. |
+
+### `kit/Crate`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `CRATE_COLOR` | const | Edge colour per work status. |
+| `CrateProps` | interface |  |
+| `Crate` | function | One unit of work as a box coloured by its status, with an optional lid tag. |
+
+### `kit/Station`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `STATION_COLOR` | const | Status-light colour per station status. |
+| `StationProps` | interface |  |
+| `Station` | function | A gate on a belt with a stage label, a waiting-count and a status light. |
+
+### `kit/WorkLine`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `WorkStation` | interface | One stage of a work line. |
+| `WorkLineProps` | interface |  |
+| `WorkLine` | function | A belt with stations; work items pile up at their stage, fail into a bin, and fly off when deployed. |
+
+### `kit/workLineLayout`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `FloorPoint` | type | A floor point [x, z]. |
+| `WorkStatus` | type | Where a unit of work is in its life. |
+| `WorkItem` | interface | One unit of work on a line: a ticket, a PR. |
+| `LineSample` | interface | A sample of a belt: its point, and the rotation about y that turns local +z downstream (so local +x points across the belt, to the left of someone facing downstream). |
+| `polylineLength` | function | Total length of a polyline, metres. |
+| `sampleLine` | function | The point `s` metres along `path`, with its heading. |
+| `offsetAcross` | function | Moves a sample `side` metres across the belt, along its local +x. |
+| `nearestAlong` | function | The distance along `path` of the point on it nearest [x, z]. |
+| `stationAlong` | function | Each station's distance along a belt of `length`: its own `at` (a 0..1 fraction) where given, else evenly spaced with room before the first for its pile and room after the last for finished work to leave. |
+| `PileOptions` | interface |  |
+| `PileSlot` | interface |  |
+| `pileSlot` | function | Where the `index`th crate (0 = first in line) of a pile sits. |
+| `pileRows` | function | How many rows of `pitch` fit in `room` metres; at least one, so a station crowded by its neighbour still has somewhere to stack. |
+| `StationStatus` | type | Station light: from its queue unless the host says otherwise. |
+| `queueStatus` | function | The default light for a queue of `count`: busy is fine, a backlog warns, a heap is critical. |
+| `WorkLineGeometry` | interface |  |
+| `Placement` | type | Where a crate is headed. |
+| `WorkLineLayout` | interface |  |
+| `layoutWorkLine` | function | Places every item. |

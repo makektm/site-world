@@ -30,6 +30,7 @@ src/screens/          ConsoleRig (screen projected onto 3D glass), Plinth, WallS
 src/camera/           orbit math
 src/world/            SiteWorld (the viewport) and WorldParts (GridFloor, WallBoxes, solids)
 src/doom/             the optional demon game: rules, nav, hunt AI, store, 3D bodies, HUD
+src/layout/           catalog-driven floor plans: layoutCatalog (domains+services -> walls, doors, rooms, slots), LOD, room graph
 examples/basic/       a toy world using only the public API — keep it compiling and small
 examples/company/     ten microservices as a building (the README screenshots) — public API only
 docs/                 ARCHITECTURE, GUIDE-*, REFERENCE (generated)

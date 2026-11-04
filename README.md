@@ -11,6 +11,30 @@ It started as the live "SITE" view of an engineering dashboard and was lifted ou
 
 <sub>Both from `examples/basic`. Regenerate with `bun run screenshot`.</sub>
 
+## Why
+
+Are your agents spinning up more services than anyone can keep track of? Is your orchestration and
+infrastructure getting out of control?
+
+Teams and their agents now ship services, queues, workers and pipelines faster than anyone can draw
+them. The diagram in the wiki was out of date the week it was made, and a new developer's mental model
+of "what runs where" is a list of names in a dashboard. Lists don't stick. *Places* do.
+
+site-world turns your internal systems into a building you can walk around in:
+
+- **One room per system.** A team, a cluster or a pipeline gets its own room; services stand in it as
+  machines with live screens. How big a room is, and how crowded, *shows* you how much is in it.
+- **Doors are boundaries.** What connects to what, and what is walled off, becomes the floor plan rather
+  than a line in a config file.
+- **Walk up and look.** Press **E** at a terminal for its live status, logs or controls. Its screen is
+  real DOM from your own app, so it can show anything your dashboard already can.
+- **An orbit view for the big picture**, and a first-person walk for the close-up. A new developer
+  learns the layout the way they'd learn a new office.
+
+The library is the engine: the viewport, rooms, doors, terminals and walk physics. Your app supplies
+the world as plain data (the layout, the rooms, what each terminal shows), so it can be generated from
+whatever already describes your infrastructure.
+
 ```tsx
 import { SiteWorld, GridFloor, WallBoxes } from "site-world";
 

@@ -5,9 +5,9 @@ Draw your data as a *place*: rooms with boards on the walls, sliding doors, term
 and press **E** at, an orbit camera for looking around and a first-person walk mode for being in it.
 It started as the live "SITE" view of an engineering dashboard and was lifted out as a library.
 
-| Orbit view of the example world | A terminal, powered |
+| A cluster as a room: pylon, orbiting services, wall dashboard | A terminal, powered |
 | --- | --- |
-| ![The example world from the orbit camera: a room with a plinth, a doorway with a sliding door, and an annex](media/overview.png) | ![The notes terminal powered on: a green-phosphor screen standing over its plinth](media/terminal.png) |
+| ![The example world from the orbit camera: a service dashboard on the far wall, a pylon with its services orbiting it, and a terminal's plinth](media/overview.png) | ![The notes terminal powered on: a green-phosphor screen standing over its plinth](media/terminal.png) |
 
 <sub>Both from `examples/basic`. Regenerate with `bun run screenshot`.</sub>
 
@@ -57,10 +57,11 @@ import { SiteWorld, GridFloor, WallBoxes } from "site-world";
 
 ```bash
 bun install
-bun run example        # a toy world: one room, a door, a terminal, and demons
+bun run example        # a toy world: one room, a door, a terminal, a pylon, a dashboard, and demons
 ```
 
-`examples/basic/` is ~200 lines and uses only the public API. Start by reading
+`examples/basic/` is ~400 lines and uses only the public API: a terminal room (`notesRoom`) and a
+cluster room (`clusterRoom`: a pylon, services orbiting it, a dashboard on the wall). Start by reading
 [`examples/basic/src/notesRoom.tsx`](examples/basic/src/notesRoom.tsx).
 
 ## What you get

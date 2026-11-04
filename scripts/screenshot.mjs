@@ -23,7 +23,7 @@ const URL = `http://localhost:${PORT}/`;
 // CSS pixels; written at 2x for high-density screens.
 const VIEW = { width: 1200, height: 700 };
 // Where the example's notes plinth lands on screen from its orbit home, at VIEW.
-const PLINTH_AT = { x: 492, y: 205 };
+const PLINTH_AT = { x: 457, y: 225 };
 
 let chromium;
 try {

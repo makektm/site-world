@@ -3,18 +3,19 @@ import {
   FloorSolid, GridFloor, SiteWorld, WallBoxes, WallSolids, configureDoom, roomDoomConfig, type SiteCamera,
 } from "site-world";
 import { BOUNDS, DOORS, WALLS } from "./layout";
+import { clusterRoom } from "./clusterRoom";
 import { notesRoom } from "./notesRoom";
 
 // The demon game is optional: hand it the floor and the walls and it runs.
 configureDoom(roomDoomConfig({ minX: -6, maxX: 6, minZ: -6, maxZ: 6 }, WALLS.slice(0, 5)));
 
 const CAMERA: SiteCamera = {
-  home: [0, 20, 17],
-  target: [0, 0, 2],
+  home: [1.5, 14, 9.5],
+  target: [0, 0, -0.6],
   walkStart: [0, 4],
   walkLookAt: [0, 1.5, -2],
 };
-const ROOMS = [notesRoom];
+const ROOMS = [notesRoom, clusterRoom];
 
 export function App() {
   const [mode, setMode] = useState<"orbit" | "walk">("orbit");

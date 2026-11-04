@@ -197,6 +197,7 @@ export function App() {
   };
 
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [layersOpen, setLayersOpen] = useState(false);
 
   // The panel: the selection, read against the moment shown.
   const view = sel.selected ? inspectFor(sel.selected, source, feed) : null;
@@ -244,6 +245,7 @@ export function App() {
           <button key={m} aria-pressed={mode === m} onClick={() => switchMode(m)}>{m}</button>
         ))}
         <button onClick={() => setPaletteOpen(true)} title="/ or Ctrl+K">go to…</button>
+        <button aria-pressed={layersOpen} onClick={() => setLayersOpen((o) => !o)} title="keys 1–9">layers</button>
         <button
           aria-pressed={tour.active}
           onClick={() => {
@@ -281,7 +283,8 @@ export function App() {
           walkHint="click to lock the cursor · WASD · shift to crouch · E to use or inspect · / to go to · 1–9 layers · Esc to release"
           overlay={
             <>
-              <LayerBar layers={layers} style={{ top: 44 }} />
+              {/* Folded away until asked for; it stays mounted so keys 1–9 work either way. */}
+              <LayerBar layers={layers} style={{ top: 44, display: layersOpen ? undefined : "none" }} />
               <InspectPanel
                 open={view !== null}
                 title={view?.title ?? ""}
@@ -294,8 +297,8 @@ export function App() {
                 onClose={sel.clear}
                 // In a tour, Esc ends the tour and leaves its selection up.
                 closeOnEscape={!tour.active}
-                // Below the layer chips, which run most of the width.
-                style={{ top: 84 }}
+                // Clear of the page's button bar.
+                style={{ top: 44 }}
               />
               <GoToPalette open={paletteOpen} onOpenChange={setPaletteOpen} targets={targets} onGo={onGo} placeholder="go to a service, room, agent, database…" />
               <TourCaption tour={tour} />

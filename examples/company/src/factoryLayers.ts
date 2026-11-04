@@ -4,18 +4,31 @@
 // digit keys': nine layers, one per key.
 import { CRITICAL, INFO, OK, PAPER, PAPER_DIM, WARN, initialLayers, type LayerDef, type LayerState } from "site-world";
 
-export const LAYERS: readonly LayerDef[] = [
+// The first view is calm: traffic, agents, the work line, infra and blast
+// radius. Cost, ownership, age and notes are a key (or the layers menu) away,
+// and ?layers=all opens with every layer on, for the full picture.
+const BASE: readonly LayerDef[] = [
   { id: "traffic", label: "traffic", question: "Who calls whom, and what ships where?", color: PAPER, defaultOn: true },
   { id: "agents", label: "agents", question: "Who is changing what, and who is stuck?", color: INFO, defaultOn: true },
   { id: "pipeline", label: "pipeline", question: "How does work flow from ticket to deploy, and where does it pile up?", color: OK, defaultOn: true },
   // Off at first: a heat map over the whole floor is a question, not a backdrop.
   { id: "cost", label: "cost", question: "Where does the money and the token budget go?", color: WARN },
-  { id: "ownership", label: "ownership", question: "Who made each service, who owns it, and what is orphaned or duplicated?", color: "#b48cff", defaultOn: true },
-  { id: "age", label: "age", question: "How old is each service? One ring per 120 days.", color: PAPER_DIM, defaultOn: true },
+  { id: "ownership", label: "ownership", question: "Who made each service, who owns it, and what is orphaned or duplicated?", color: "#b48cff" },
+  { id: "age", label: "age", question: "How old is each service? One ring per 120 days.", color: PAPER_DIM },
   { id: "blast", label: "blast radius", question: "If the selected service fails, who breaks?", color: CRITICAL, defaultOn: true },
-  { id: "notes", label: "notes", question: "What have people and agents written down?", color: PAPER_DIM, defaultOn: true },
+  { id: "notes", label: "notes", question: "What have people and agents written down?", color: PAPER_DIM },
   { id: "infra", label: "infra", question: "What do services lean on — databases, queues, third parties — and who holds keys?", color: OK, defaultOn: true },
 ];
+
+function allOn(): boolean {
+  try {
+    return new URLSearchParams(globalThis.location?.search ?? "").get("layers") === "all";
+  } catch {
+    return false;
+  }
+}
+
+export const LAYERS: readonly LayerDef[] = allOn() ? BASE.map((d) => ({ ...d, defaultOn: true })) : BASE;
 
 export type LayerId = "traffic" | "agents" | "pipeline" | "cost" | "ownership" | "age" | "blast" | "notes" | "infra";
 

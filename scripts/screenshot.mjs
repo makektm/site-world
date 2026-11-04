@@ -1,6 +1,7 @@
 // Regenerates the README's images from examples/company: builds it, serves
 // it, and photographs it in headless Chromium —
 //   media/overview.png  the building from the orbit camera's home
+//   media/overview-full.png  the same, with every layer on (?layers=all)
 //   media/factory.png   the factory hall: the work line and its review pile
 //   media/inspect.png   a selected service: the inspect panel and its blast radius
 //   media/terminal.png  the on-call console, after a click on its plinth
@@ -128,12 +129,18 @@ try {
   if (!powered) throw new Error("no terminal powered: the click at the screen centre missed the plinth");
   await page.screenshot({ path: path.join(MEDIA, "terminal.png") });
 
+  // The full picture: every layer on, from the orbit home.
+  await page.goto(`${URL}?layers=all`);
+  await page.waitForTimeout(2500);
+  await page.addStyleTag({ content: ".bar { visibility: hidden !important; }" });
+  await page.screenshot({ path: path.join(MEDIA, "overview-full.png") });
+
   await browser.close();
   if (errors.length) {
     console.error("page errors:\n" + errors.join("\n"));
     process.exitCode = 1;
   } else {
-    console.log("wrote media/overview.png, factory.png, inspect.png, terminal.png and walk.png");
+    console.log("wrote media/overview.png, overview-full.png, factory.png, inspect.png, terminal.png and walk.png");
   }
 } finally {
   stop();

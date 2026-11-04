@@ -19,10 +19,17 @@ It started as the live "SITE" view of an engineering dashboard and was lifted ou
   the loading dock, cost per room, and padlocks on secrets.
 - **Blast radius.** Select a service and see what breaks if it fails.
 
+Everything on (`?layers=all`): cost heat on the floor, ownership and age rings, look-alike and orphan
+markers, and notes.
+
+![The same building with every layer on: cost heat on the floors, ownership and age rings, links between look-alike services, and sticky notes](media/overview-full.png)
+
 ## What you can do
 
 - **Inspect** anything: click it (or press **E** in walk mode) for a panel with its details.
-- **Layers**: turn traffic, agents, cost, ownership, age, blast radius and more on and off (keys **1–9**).
+- **Layers**: turn traffic, agents, cost, ownership, age, blast radius and more on and off, from the
+  **layers** button or keys **1–9**. The first view is kept calm; open the demo with `?layers=all` to see
+  everything at once.
 - **Go to and follow**: press **/** and type a name to fly there; follow an agent as it works.
 - **Timeline**: scrub back through six months and watch the building grow.
 - **Tours**: a guided walk through a story, such as "why is checkout slow?".

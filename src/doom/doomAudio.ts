@@ -1,6 +1,6 @@
 // The demon game's sound: every effect synthesised with WebAudio from an
 // oscillator or a burst of noise — no asset files to ship, nothing fetched
-// from anywhere. Kept deliberately quiet (MASTER), since SITE is a viewport
+// from anywhere. Kept deliberately quiet (MASTER), since site-world is a viewport
 // inside a host application first.
 //
 // The AudioContext is created by wakeAudio() from the first click or key

@@ -8,8 +8,8 @@
 // buys roughly MEMORY + the search + SCENT_AFTER seconds; one who fires
 // gives themself away to everything within earshot.
 //
-// Brutes are also slowed in the tunnel: at their size it is a squeeze, which
-// makes the tunnel the one place a brute can be outrun and fought on the
+// Brutes are also slowed in a corridor: at their size it is a squeeze, which
+// makes a corridor the one place a brute can be outrun and fought on the
 // walker's terms.
 //
 // Pure: nav reads, number writes, no allocation.
@@ -28,7 +28,7 @@ export interface Quarry {
   heard: boolean;
 }
 
-// Seen at any range down a clear line; the arena's diagonal is ~27m.
+// Seen at any range down a clear line; a large arena's diagonal is ~27m.
 export const SIGHT_RANGE = 30;
 // Close enough to sense round a corner or through a crate.
 export const SMELL_RANGE = 3.5;

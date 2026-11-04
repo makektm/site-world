@@ -3,7 +3,7 @@
 // of the export's doc comment (or the comment directly above it).
 //
 //   node scripts/reference.mjs          write docs/REFERENCE.md
-//   import { render } from ...          src/docs.test.ts compares render() to the file
+//   import { render } from ...          scripts/docs.test.ts compares render() to the file
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

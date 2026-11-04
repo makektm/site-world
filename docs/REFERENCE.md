@@ -10,9 +10,9 @@ Everything below is exported from `site-world`. One line each; read the source f
 
 | Export | Kind | What |
 | --- | --- | --- |
-| `SiteCamera` | interface |  |
-| `SiteWorldProps` | interface |  |
-| `SiteWorld` | function |  |
+| `SiteCamera` | interface | Where the camera starts: orbit `home`/`target`, walker `walkStart`/`walkLookAt`. |
+| `SiteWorldProps` | interface | Everything `<SiteWorld>` takes: mode and camera, rooms/doors/solids as data, host hooks. |
+| `SiteWorld` | function | The whole viewport: canvas, orbit/walk cameras, doors, rooms, terminals and their DOM screens. |
 
 ### `world/WorldParts`
 
@@ -52,13 +52,13 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `BOARD_STANDOFF` | const |  |
 | `HALO_STANDOFF` | const |  |
 | `hungOnWall` | function | Where a panel's plane hangs: the wall centre-line point `wall`, moved `standoff` along the normal `rotationY` turns the panel's front face onto (0 faces +z, PI faces -z, ±PI/2 faces ±x). |
-| `KILL_PLANE_Y` | const | Generic fall-and-respawn threshold — any hazard anywhere in SITE that wants "fall through and get put back somewhere safe" reads this same constant; it is not specific to any one hazard. |
+| `KILL_PLANE_Y` | const | Generic fall-and-respawn threshold — any hazard anywhere in the world that wants "fall through and get put back somewhere safe" reads this same constant; it is not specific to any one hazard. |
 | `WallSegment` | interface | One solid box, in world space. |
-| `Doorway` | interface | The doorways cut through the main room's walls. |
+| `Doorway` | interface | The doorways cut through the hub room's walls. |
 | `DOOR_H` | const | A door leaf's height, and so the header's underside. |
 | `DOOR_HEADER_H` | const |  |
 | `DOOR_POST_W` | const | The steel frame around a doorway (DoorFrame.tsx) stands a jamb post this wide outside each side of the gap, 0.09m proud of the wall on both faces — so a door's frame reaches halfWidth + DOOR_POST_W from its centre, and anything hung on the wall beside a door starts past that, not at halfWidth. |
-| `DoorSignSpec` | interface | Each room's name hangs on its header, on the main room's own side — the hub every walker passes through before choosing a door — as a banner about the gap's width, centred in the header. |
+| `DoorSignSpec` | interface | Each room's name hangs on its header, on the hub room's own side — the hub every walker passes through before choosing a door — as a banner about the gap's width, centred in the header. |
 | `HOME_POS` | const |  |
 | `HOME_TARGET` | const |  |
 | `EYE` | const |  |
@@ -91,11 +91,6 @@ Everything below is exported from `site-world`. One line each; read the source f
 
 | Export | Kind | What |
 | --- | --- | --- |
-| `SiteHotkeys` | type |  |
-| `registerSiteHotkeys` | function |  |
-| `siteHotkeys` | function |  |
-| `requestFocusView` | function |  |
-| `consumeFocusView` | function |  |
 | `registerOrbitNudge` | function |  |
 | `nudgeOrbit` | function |  |
 | `registerCameraBasis` | function |  |
@@ -106,15 +101,15 @@ Everything below is exported from `site-world`. One line each; read the source f
 | Export | Kind | What |
 | --- | --- | --- |
 | `isTypingTarget` | function |  |
-| `isChromeOpen` | function | Command palette or the shortcuts overlay. |
-| `pageSearchField` | function | Visible search field on the current page, if any. |
+| `setChromeOpenCheck` | function | Tell the viewport how to know that the host's own dialog (a command palette, a shortcuts overlay) is up, so walking, E and the game do not steal its keys. |
+| `isChromeOpen` | function | True while a host dialog is up: keys belong to it, not to the world. |
 
 ### `core/room`
 
 | Export | Kind | What |
 | --- | --- | --- |
-| `RoomEnv` | interface |  |
-| `SiteRoom` | interface |  |
+| `RoomEnv` | interface | What every room receives: the mode, `reduce`, the terminal slot, and `onOpenPage`. |
+| `SiteRoom` | interface | One room: its data (`useModel`), 3D (`Scene`), DOM screen (`Overlay`), walk solids and prompt. |
 | `defineRoom` | function | Types a room's model once, then forgets it so rooms of different models share one list. |
 | `useRoomModels` | function | Each room's model, in list order. |
 
@@ -122,7 +117,7 @@ Everything below is exported from `site-world`. One line each; read the source f
 
 | Export | Kind | What |
 | --- | --- | --- |
-| `CONSOLE_PX_W` | const | The pixel size of a SITE screen's DOM, which the engine's screen warp and wall screens project onto a 3D quad. |
+| `CONSOLE_PX_W` | const | The pixel size of a site-world screen's DOM, which the engine's screen warp and wall screens project onto a 3D quad. |
 | `CONSOLE_PX_H` | const |  |
 
 ### `core/terminals`
@@ -188,7 +183,7 @@ Everything below is exported from `site-world`. One line each; read the source f
 
 | Export | Kind | What |
 | --- | --- | --- |
-| `SiteDoor` | type |  |
+| `SiteDoor` | type | A door as data: id, three-letter code, the doorway (centre, axis, half-width) and how it opens. |
 | `DoorsOpen` | type | door id -> open. |
 | `allClosed` | const |  |
 
@@ -252,7 +247,7 @@ Everything below is exported from `site-world`. One line each; read the source f
 
 | Export | Kind | What |
 | --- | --- | --- |
-| `Plinth` | function |  |
+| `Plinth` | function | The pedestal a terminal screen stands in front of; click it in orbit mode to power the terminal. |
 
 ### `screens/UsePrompt`
 
@@ -272,7 +267,7 @@ Everything below is exported from `site-world`. One line each; read the source f
 | Export | Kind | What |
 | --- | --- | --- |
 | `WallScreenProps` | interface |  |
-| `WallScreen` | function |  |
+| `WallScreen` | function | A wall-mounted interactive screen: a terminal with no plinth, powered by E or a click. |
 
 ### `screens/screenWarp`
 
@@ -363,7 +358,7 @@ Everything below is exported from `site-world`. One line each; read the source f
 | --- | --- | --- |
 | `Awareness` | type |  |
 | `Quarry` | interface | Where the walker is, as the demons may know it: on the plan (see doomNav.ts's locate), and whether a shot rang out just now. |
-| `SIGHT_RANGE` | const | Seen at any range down a clear line; the arena's diagonal is ~27m. |
+| `SIGHT_RANGE` | const | Seen at any range down a clear line; a large arena's diagonal is ~27m. |
 | `SMELL_RANGE` | const | Close enough to sense round a corner or through a crate. |
 | `HEAR_RANGE` | const | A shot carries this far, walls or not. |
 | `MEMORY` | const | How long a demon keeps tracking after it loses contact. |

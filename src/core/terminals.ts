@@ -165,9 +165,12 @@ export function useTerminals(
   }, [actions, activeId, rigs, nears, focus, anchors]);
 
   const activeDef = activeId ? defs.find((d) => d.id === activeId) : undefined;
-  return {
-    get,
-    anyOn: activeId !== null,
-    active: activeDef ? { def: activeDef, anchor: anchors[activeDef.id] ?? null } : null,
-  };
+  const activeAnchor = activeDef ? anchors[activeDef.id] ?? null : null;
+  // Stable while nothing about the powered terminal changed, so a fly-in keyed
+  // on it is not restarted by unrelated re-renders.
+  const active = useMemo(
+    () => (activeDef ? { def: activeDef, anchor: activeAnchor } : null),
+    [activeDef, activeAnchor],
+  );
+  return { get, anyOn: activeId !== null, active };
 }

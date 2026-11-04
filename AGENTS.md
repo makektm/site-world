@@ -9,9 +9,9 @@ This file is the map for any agent (or human) changing the repo. It is short on 
 bun install
 bun run typecheck      # tsc over src/ and scripts/
 bun run test           # vitest (jsdom). Includes the boundary test and the docs-are-current test
-bun run check          # typecheck + test
+bun run check          # typecheck (src, scripts, example) + test
 bun run example        # hot-reloading demo (examples/basic)
-bun run reference      # regenerate docs/REFERENCE.md from the code (CI fails if it is stale)
+bun run reference      # (uses node) regenerate docs/REFERENCE.md from the code (CI fails if it is stale)
 ```
 
 Never run a bare binary; use the scripts so config and caching apply.
@@ -43,7 +43,8 @@ docs/                 ARCHITECTURE, GUIDE-*, REFERENCE (generated)
 ## Conventions
 
 - One concept per file; no barrel files except `src/index.ts`.
-- No `useEffect` unless it is a real subscription (keyboard, resize). Prefer derived state and handlers.
+- Prefer derived state and handlers. `useEffect` is for subscriptions (keyboard, resize) and for syncing
+  imperative three.js objects (camera, octree) — not for deriving React state.
 - A **room** is a module that calls `defineRoom` (src/core/room.ts). Hosts compose rooms; the viewport
   never names one. Adding a room must not require editing `SiteWorld`.
 - Data in, behaviour out: doors, signs, solids, cameras, the Doom floor plan are all *props*.

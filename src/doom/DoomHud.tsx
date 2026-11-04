@@ -1,4 +1,4 @@
-// The demon game's HUD: a DOM overlay over the SITE canvas, a sibling of it
+// The demon game's HUD: a DOM overlay over the canvas, a sibling of it
 // the way the walk hint and the "[E] USE" prompt are, mounted by
 // the host only in walk mode. 4 hides and shows it; the death
 // screen shows either way, since it is how the player gets back up.

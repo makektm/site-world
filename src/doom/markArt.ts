@@ -1,7 +1,7 @@
 // The two textures DoomMarks.tsx lays down, drawn once on a canvas: white
 // on transparent, since each mark is tinted per instance and drawn
 // additively (white takes the tint, transparent adds nothing). Line-art,
-// like the rest of SITE — a ring and its cracks, not a photograph of a
+// like the rest of the world — a ring and its cracks, not a photograph of a
 // hole.
 
 /** A round's strike: a soft scorch, a hard ring where it went in, and a

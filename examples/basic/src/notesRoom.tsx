@@ -1,4 +1,4 @@
-// A room is one module. This one is a notes terminal: a plinth in the main room
+// A room is one module. This one is a notes terminal: a plinth in the room
 // that powers a screen, and a screen that shows a list. It owns its data
 // (useModel), its 3D (Scene), its DOM (Overlay), its walk solids (Colliders)
 // and the "[E]" prompt. Copy it to make your own.

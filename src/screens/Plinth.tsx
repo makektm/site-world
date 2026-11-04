@@ -7,6 +7,7 @@ import { Edges } from "@react-three/drei";
 import { DoubleSide } from "three";
 import { PAPER } from "../core/engine";
 
+/** The pedestal a terminal screen stands in front of; click it in orbit mode to power the terminal. */
 export function Plinth({
   at, width = 0.64, height = 1.05, onActivate,
 }: {

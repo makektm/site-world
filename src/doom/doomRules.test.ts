@@ -36,7 +36,7 @@ import {
 } from "./doomRules";
 import { roomNav } from "./testNav";
 
-// The main room's shape: one cell, walled on its four sides at ±8.
+// The room's shape: one cell, walled on its four sides at ±8.
 const ROOM = roomNav(-8, 8, -8, 8);
 
 /** Run steering for `seconds` at 60fps, the player fixed at (px, pz). */

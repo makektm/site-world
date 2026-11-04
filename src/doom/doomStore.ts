@@ -41,8 +41,8 @@ function channel<T>(initial: T) {
 // they rise — is the host's, handed in once by configureDoom before anything
 // renders (see configureDoom). `let` so importers see the live value.
 export let doom!: DoomWorld;
-let hud!: ReturnType<typeof channel<HudSnapshot>>;
-let roster!: ReturnType<typeof channel<readonly Enemy[]>>;
+let hud: ReturnType<typeof channel<HudSnapshot>> | undefined;
+let roster: ReturnType<typeof channel<readonly Enemy[]>> | undefined;
 let savedBest = 0;
 const BEST_KEY = "site.doom.best";
 
@@ -59,8 +59,12 @@ export function configureDoom(config: DoomConfig): void {
     // No storage: best starts at zero this session.
   }
   savedBest = doom.best;
-  hud = channel<HudSnapshot>(hudSnapshot(doom));
-  roster = channel<readonly Enemy[]>([]);
+  // Reconfiguring (hot reload, tests) keeps the same channels so existing
+  // subscribers keep hearing; they just receive the new world's first snapshot.
+  if (hud) hud.set(hudSnapshot(doom));
+  else hud = channel<HudSnapshot>(hudSnapshot(doom));
+  if (roster) roster.set([]);
+  else roster = channel<readonly Enemy[]>([]);
 }
 
 /** Push whatever the last frame changed out to React. Cheap when nothing
@@ -68,11 +72,11 @@ export function configureDoom(config: DoomConfig): void {
 export function publish(): void {
   if (doom.rosterDirty) {
     doom.rosterDirty = false;
-    roster.set(doom.enemies.slice());
+    configured(roster).set(doom.enemies.slice());
   }
   if (doom.hudDirty) {
     doom.hudDirty = false;
-    hud.set(hudSnapshot(doom));
+    configured(hud).set(hudSnapshot(doom));
     if (doom.best > savedBest) {
       savedBest = doom.best;
       try {
@@ -85,10 +89,14 @@ export function publish(): void {
 }
 
 // Stable functions over the live channel, so React does not resubscribe per render.
-const subscribeHud = (l: Listener) => hud.subscribe(l);
-const getHud = () => hud.get();
-const subscribeRoster = (l: Listener) => roster.subscribe(l);
-const getRoster = () => roster.get();
+function configured<T>(c: T | undefined): T {
+  if (!c) throw new Error("site-world: call configureDoom(config) before rendering the demon game");
+  return c;
+}
+const subscribeHud = (l: Listener) => configured(hud).subscribe(l);
+const getHud = () => configured(hud).get();
+const subscribeRoster = (l: Listener) => configured(roster).subscribe(l);
+const getRoster = () => configured(roster).get();
 
 export function useDoomHud(): HudSnapshot {
   return useSyncExternalStore(subscribeHud, getHud);

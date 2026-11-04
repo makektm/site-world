@@ -11,7 +11,7 @@ import { SiteWorld, GridFloor, WallBoxes } from "site-world";
 <SiteWorld
   mode="orbit"            // or "walk"
   reduce={false}
-  camera={{ home: [9, 8, 12], target: [0, 1, 2], walkStart: [0, 4], walkLookAt: [0, 1.5, -2] }}
+  camera={CAMERA}         // {home, target, walkStart, walkLookAt}
   rooms={[notesRoom]}     // modules that own a terminal, a board, a feed
   doors={DOORS}           // plain data: where, how wide, how it opens
   solids={wallsAndFloorAsBoxes}

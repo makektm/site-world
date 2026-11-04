@@ -1,7 +1,7 @@
 // The room's name over each doorway, so a walker knows what is behind a door
 // before opening it — the one thing a schematic world never says out loud
 // until its walls are solid enough to need it. A banner hung on the door's
-// header, centred in it, on the main room's own side. One reusable component
+// header, centred in it, on the hub room's own side. One reusable component
 // for every door, not several near-identical copies (see useCanvasTexture.ts's
 // own header on that exact mistake, made nine times over before that file
 // existed).
@@ -15,7 +15,7 @@ import { useCanvasTexture } from "../core/useCanvasTexture";
 // Texels to the metre: about what the other plaques and boards carry. A banner
 // is as wide as its doorway, so its texture follows that width.
 const PX_PER_M = 320;
-// The name's cap height is 0.4m, readable from across the main room's 17m; the
+// The name's cap height is 0.4m, readable from across a 17m room; the
 // line under it is a quarter of that.
 const LABEL_PX = 180;
 const SUB_PX = 44;

@@ -1,5 +1,5 @@
 // Chrome dialogs (palette, shortcuts overlay) live at the shell root, so
-// they vanish when SITE takes the Fullscreen API — only the fullscreen
+// they vanish when the viewport takes the Fullscreen API — only the fullscreen
 // element's descendants stay visible. Portal into that element when it is
 // set, and back to document.body when it is not.
 

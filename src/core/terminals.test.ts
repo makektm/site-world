@@ -1,4 +1,4 @@
-// What every SITE terminal must do about a walker: being in range never powers
+// What every site-world terminal must do about a walker: being in range never powers
 // it on, E does, walking away powers it off — and only one is ever powered.
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";

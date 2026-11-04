@@ -1,19 +1,20 @@
-// What a SITE room is. One room is one module that exports a SiteRoom and is
+// What a site-world room is. One room is one module that exports a SiteRoom and is
 // listed once in the host's room list; the orchestrator (SiteWorld) knows no
 // room by name. Adding a room is a file and a list entry; removing one is the
 // reverse.
 //
-// A room is four things, because SITE is two React trees — the three.js canvas
+// A room is four things, because site-world is two React trees — the three.js canvas
 // and the DOM beside it — that cannot share hooks:
 //   useModel  runs in the orchestrator (DOM tree): feeds, derived state.
 //   Scene     draws inside the canvas, from the model.
 //   Overlay   draws DOM beside the canvas (the terminal screens), from the model.
 //   Colliders invisible solids for the walk-mode octree (a plinth).
 // plus the terminals it owns, which the orchestrator powers through one slot
-// (siteTerminals.ts).
+// (terminals.ts).
 import type { ReactNode } from "react";
 import type { TerminalDef, Terminals } from "./terminals";
 
+/** What every room receives: the mode, `reduce`, the terminal slot, and `onOpenPage`. */
 export interface RoomEnv {
   mode: "orbit" | "walk";
   reduce: boolean;
@@ -24,6 +25,7 @@ export interface RoomEnv {
   onOpenPage(to: string): void;
 }
 
+/** One room: its data (`useModel`), 3D (`Scene`), DOM screen (`Overlay`), walk solids and prompt. */
 export interface SiteRoom<M = unknown> {
   id: string;
   terminals?: readonly TerminalDef[];

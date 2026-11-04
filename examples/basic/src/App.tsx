@@ -43,7 +43,7 @@ export function App() {
           rooms={ROOMS}
           doors={DOORS}
           solids={solids}
-          doomSwitchAt={{ x: 3, y: 1.4, wallZ: -6 }}
+          doomSwitchAt={{ x: 3, y: 1.4, wallZ: -6, facing: 1 }}
           cameraRef={cameraRef}
           onOpenPage={() => {}}
           walkHint="click to lock the cursor · WASD · shift to crouch · E to use · Esc to release"

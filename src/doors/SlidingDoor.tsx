@@ -1,7 +1,7 @@
-// Sliding doors for the SITE viewport's doorways.
+// Sliding doors for the viewport's doorways.
 //
-// A leaf is DOOR_H tall and stands on the floor; a header (DOOR_HEADERS,
-// from the host's layout) fills the doorway from there up to WALL. Most doorways
+// A leaf is DOOR_H tall and stands on the floor; a header (from the
+// host's layout) fills the doorway from there up to WALL. Most doorways
 // are single vertical roll-ups: the leaf's top stays pinned at DOOR_H and its
 // height damps down to a sliver, so it retracts into the header like a
 // shutter instead of rising through it. A wide doorway can be bi-parting:

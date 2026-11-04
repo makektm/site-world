@@ -1,9 +1,9 @@
-// The world's layout, as plain data: one main room, a door in its south wall
+// The world's layout, as plain data: one room, a door in its south wall
 // into a small annex, and the walls around both. Everything site-world draws or
 // collides with is derived from these numbers.
 import { DOOR_H, WALL, type SiteDoor, type WallSegment } from "site-world";
 
-export const HALF = 6; // main room: x, z in [-6, 6]
+export const HALF = 6; // room: x, z in [-6, 6]
 export const ANNEX_Z = 10; // annex: z in [6, 10], x in [-2, 2]
 export const GAP = 1.5; // door half-width
 const T = 0.2; // wall thickness

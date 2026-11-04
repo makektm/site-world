@@ -1,7 +1,6 @@
 // Doors, drawn and wired from a list of SiteDoor: a leaf per door, a walk-up
 // trigger per door reporting into one open/closed record, and the collider box
-// across each closed door. Nothing here names a door — the list is the world's
-// (worldDoors.ts).
+// across each closed door. Nothing here names a door — the list is the host's.
 import { useCallback, useMemo, useState } from "react";
 import type { RefObject } from "react";
 import type { Group } from "three";

@@ -1,5 +1,5 @@
-/* The demon game's HUD — laid over the SITE canvas in walk mode.
-   Prefixed .dhud- so nothing here can restyle the SITE view around it.
+/* The demon game's HUD — laid over the canvas in walk mode.
+   Prefixed .dhud- so nothing here can restyle the world view around it.
 
    The drawing's own vocabulary: IBM Plex Mono on INK plates with a 1px
    PAPER rule, the way the walk hint and the machine labels read; CRITICAL

@@ -4,10 +4,10 @@
 //
 // WHICH ROUTE, and why it is ConsoleRig's rather than a texture or drei's
 // <Html transform>: html-on-3d-surfaces needs real inputs here (a text field,
-// a password, a list), and the only route that gives real DOM in every
+// a form, a list), and the only route that gives real DOM in every
 // browser at a legible size is the projected-corner overlay — screenWarp.ts.
-// Its cost is that DOM cannot be hidden behind scene objects, so like the
-// machine consoles the panel is on screen only while it is powered, and what
+// Its cost is that DOM cannot be hidden behind scene objects, so like a host-owned
+// console the panel is on screen only while it is powered, and what
 // hangs on the wall the rest of the time is the standby plate, an ordinary
 // lit-and-occluded CanvasTexture, which is also what a walker or an orbit
 // click aims at.
@@ -84,6 +84,7 @@ export interface WallScreenProps {
   onActivate?: () => void;
 }
 
+/** A wall-mounted interactive screen: a terminal with no plinth, powered by E or a click. */
 export function WallScreen({
   wall, rotationY, panelId, title, caption, hint, powered, screen, onPoweredOff, onActivate,
 }: WallScreenProps) {

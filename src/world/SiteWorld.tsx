@@ -31,6 +31,7 @@ import { EYE, INK, SCREEN_Y, VIEW_DIST, type DoorSignSpec } from "../core/engine
 import { useRoomModels, type RoomEnv, type SiteRoom } from "../core/room";
 import { useTerminals } from "../core/terminals";
 
+/** Where the camera starts: orbit `home`/`target`, walker `walkStart`/`walkLookAt`. */
 export interface SiteCamera {
   /** Orbit: where the camera starts, and what it looks at and orbits. */
   home: readonly [number, number, number];
@@ -40,6 +41,7 @@ export interface SiteCamera {
   walkLookAt: readonly [number, number, number];
 }
 
+/** Everything `<SiteWorld>` takes: mode and camera, rooms/doors/solids as data, host hooks. */
 export interface SiteWorldProps {
   mode: "orbit" | "walk";
   reduce: boolean;
@@ -79,6 +81,9 @@ export interface SiteWorldProps {
 
 function CameraRig({ mode, camera: cfg }: { mode: "orbit" | "walk"; camera: SiteCamera }) {
   const { camera } = useThree();
+  // Depends on the numbers, not the `cfg` object: a host that passes an inline
+  // literal must not snap the camera back on every render.
+  const key = mode === "walk" ? cfg.walkStart.join() + cfg.walkLookAt.join() : cfg.home.join() + cfg.target.join();
   useEffect(() => {
     if (mode === "walk") {
       camera.position.set(cfg.walkStart[0], EYE, cfg.walkStart[1]);
@@ -87,7 +92,8 @@ function CameraRig({ mode, camera: cfg }: { mode: "orbit" | "walk"; camera: Site
       camera.position.set(...cfg.home);
       camera.lookAt(...cfg.target);
     }
-  }, [mode, camera, cfg]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` stands for cfg's numbers
+  }, [mode, camera, key]);
   return null;
 }
 
@@ -103,6 +109,7 @@ function CameraTracker({ into }: { into: RefObject<{ x: number; z: number }> }) 
 
 const NONE: readonly never[] = [];
 
+/** The whole viewport: canvas, orbit/walk cameras, doors, rooms, terminals and their DOM screens. */
 export function SiteWorld({
   mode, reduce, camera, rooms, doors = NONE, doorSigns, solids, cylinders = NONE, checkpoint, doomSwitchAt,
   onOpenPage, cameraRef, consoleId = null, onConsoleExit, hostGoal = null, hostPrompt = null, walkHint,

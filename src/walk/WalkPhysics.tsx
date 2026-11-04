@@ -207,9 +207,11 @@ export function WalkRig({
   // un-set it — that would send a walker further back than the ground
   // they've already covered).
   useEffect(() => {
-    if (!checkpoint) return;
+    // Re-applied on re-entering walk mode (`enabled`): the replant above resets
+    // the respawn point to the entry position, which a held checkpoint overrides.
+    if (!enabled || !checkpoint) return;
     respawnPos.current.set(checkpoint[0], PLAYER_RADIUS, checkpoint[1]);
-  }, [checkpoint]);
+  }, [enabled, checkpoint]);
 
   useFrame((_, dtRaw) => {
     if (!enabled) return;

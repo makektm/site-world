@@ -1,4 +1,4 @@
-// The marks a fight leaves on SITE: a hole where each round struck a wall
+// The marks a fight leaves on the world: a hole where each round struck a wall
 // or a piece of cover, a scorch where one struck the floor or a brute's
 // slam landed, and a splat of ichor where each demon fell. Both pools
 // (doomWorld.ts's marks and splats) are ring buffers, so the oldest mark

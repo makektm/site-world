@@ -4,9 +4,10 @@
 // handed in as arguments, never imported.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const SRC = path.dirname(new URL(import.meta.url).pathname);
+const SRC = path.dirname(fileURLToPath(import.meta.url));
 
 // Runtime dependencies are exactly the package's peerDependencies, plus
 // three's addons and (in tests only) vitest / testing-library / node builtins.

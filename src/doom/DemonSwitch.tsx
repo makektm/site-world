@@ -30,6 +30,9 @@ export interface SwitchAt {
   x: number;
   y: number;
   wallZ: number;
+  /** Which way the panel faces along z: -1 (default) on a wall whose room is at smaller z
+   * (a south wall), +1 on a wall whose room is at larger z (a north wall). */
+  facing?: 1 | -1;
 }
 
 export function DemonSwitchProp({ at }: { at: SwitchAt }) {
@@ -44,7 +47,7 @@ export function DemonSwitchProp({ at }: { at: SwitchAt }) {
     }
   });
   return (
-    <group position={[at.x, at.y, at.wallZ - PANEL_STANDOFF]} rotation={[0, Math.PI, 0]}>
+    <group position={[at.x, at.y, at.wallZ + (at.facing ?? -1) * PANEL_STANDOFF]} rotation={[0, (at.facing ?? -1) < 0 ? Math.PI : 0, 0]}>
       <mesh>
         <boxGeometry args={[0.26, 0.4, 0.06]} />
         <meshBasicMaterial color={PAPER} transparent opacity={0.08} depthWrite={false} />

@@ -24,12 +24,12 @@ const WALLS: WallSegment[] = [
 </SiteWorld>
 ```
 
-`solids` is what the walker collides with. **Memoise it** (`useMemo`): the octree rebuilds when its
+`solids` is what the walker collides with. **Memoise it** (`useMemo`) — as with `rooms`, `doors` and `cylinders`, keep identities stable: the octree rebuilds when its
 element identity changes. `WallBoxes` and `WallSolids` take the same list, so what you see is what you hit.
 
 ## 3. Cameras
 
-`SiteCamera` has four fields: orbit `home` and `target`, and the walker's `walkStart` `[x, z]` and
+`SiteCamera` has four fields (pass a module constant or memoise it): orbit `home` and `target`, and the walker's `walkStart` `[x, z]` and
 `walkLookAt`. `mode` ("orbit" | "walk") is yours to own: render your own toggle.
 
 ## 4. Add rooms and doors

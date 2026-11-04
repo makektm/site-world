@@ -4,7 +4,7 @@
 // narrow 40° lens. The world camera is only read (for sway and walk bob),
 // never parented to.
 //
-// Line-art like everything else in SITE — dark fill, PAPER edges — with
+// Line-art like everything else in the world — dark fill, PAPER edges — with
 // the working parts lit: a strip of twelve round indicators along the
 // slide that go dark as the magazine empties (the ammo count is on the gun,
 // not only on the HUD), a glowing cell in the grip that drains with them,
@@ -29,7 +29,7 @@ const REST_X = 0.17;
 const REST_Y = -0.15;
 const REST_Z = -0.5;
 // The model below is drawn at roughly real pistol size; at this distance
-// through the Hud's lens that fills too much of SITE's small viewport, so
+// through the Hud's lens that fills too much of a small viewport, so
 // the whole rig is scaled down rather than every part redrawn.
 const RIG_SCALE = 0.62;
 const FLASH_TIME = 0.055;

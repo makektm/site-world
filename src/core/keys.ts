@@ -1,7 +1,6 @@
-// Shared key-target tests. Every global handler in this app asks these
-// rather than restating "is the person typing" and "is a chrome dialog
-// already up" — the palette, the shortcuts overlay, SITE walk, and the
-// SITE console-Esc handler.
+// Shared key-target tests. Every global key handler in the viewport (walk, E,
+// the demon game) asks these rather than restating "is the person typing" and
+// "is a dialog already up".
 
 export function isTypingTarget(el: EventTarget | null): boolean {
   if (!(el instanceof HTMLElement)) return false;
@@ -10,23 +9,16 @@ export function isTypingTarget(el: EventTarget | null): boolean {
   return el.isContentEditable;
 }
 
-/** Command palette or the shortcuts overlay. A second overlay must not
- * steal keys from one that is already up, and SITE must not walk through
- * either. */
-export function isChromeOpen(): boolean {
-  return document.querySelector(".cmdk-dialog, .kbd-dialog") != null;
+let chromeOpen: () => boolean = () => document.querySelector("dialog[open], [role='dialog']") != null;
+
+/** Tell the viewport how to know that the host's own dialog (a command palette,
+ * a shortcuts overlay) is up, so walking, E and the game do not steal its keys.
+ * The default is any open `<dialog>` or `[role=dialog]`. */
+export function setChromeOpenCheck(check: () => boolean): void {
+  chromeOpen = check;
 }
 
-/** Visible search field on the current page, if any. `/` focuses that
- * instead of opening the palette — a page list view (or any panel that
- * uses `type="search"`) already owns that key as "filter this list". */
-export function pageSearchField(): HTMLInputElement | null {
-  const nodes = document.querySelectorAll<HTMLInputElement>(
-    "input[type='search']:not([disabled])",
-  );
-  for (const node of nodes) {
-    if (node.offsetParent === null) continue;
-    return node;
-  }
-  return null;
+/** True while a host dialog is up: keys belong to it, not to the world. */
+export function isChromeOpen(): boolean {
+  return chromeOpen();
 }

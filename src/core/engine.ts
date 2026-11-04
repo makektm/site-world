@@ -1,4 +1,4 @@
-// The SITE engine's constants and pure helpers: palette, wall/door/standoff
+// The site-world engine's constants and pure helpers: palette, wall/door/standoff
 // units, the player and physics numbers, camera, interaction thresholds, and the
 // few small helpers (hashStr, easeInOut, fitText, getGlowTexture) every engine
 // module reads. Nothing here names a room or a layout — that is the host's world.
@@ -33,7 +33,7 @@ export const WALL = 4.2;
 // jamb. One shared gap width cannot do this for rooms of different widths, so
 // each doorway takes its own room's width.
 // One wall's thickness: the walk-mode collider's, and the visible fill's too —
-// the host's wall renderer draws each WALL_SEGMENTS box at exactly this size, on
+// the host's wall renderer draws each of a host's wall boxes at exactly this size, on
 // the centre-line every coordinate in the room is measured to.
 export const COLLIDER_WALL_T = 0.2;
 // From that centre-line to the wall's visible face on either side. Anything
@@ -60,23 +60,23 @@ export function hungOnWall(
   return [wall[0] + Math.sin(rotationY) * standoff, wall[1] + Math.cos(rotationY) * standoff];
 }
 
-// Generic fall-and-respawn threshold — any hazard anywhere in SITE that
+// Generic fall-and-respawn threshold — any hazard anywhere in the world that
 // wants "fall through and get put back somewhere safe" reads this same
 // constant; it is not specific to any one hazard.
 export const KILL_PLANE_Y = -3;
 // One solid box, in world space. A standing wall runs from y=0 to y=WALL; a
-// door header (DOOR_HEADERS below) from DOOR_H to WALL. WALL_SEGMENTS and
-// DOOR_HEADERS are the layout's one home for the solid boxes: the visible
-// walls and the walk-mode Octree (WalkPhysics.tsx's WalkColliders) both build from them, so what a walker sees is what a walker
-// bumps.
+// door header from DOOR_H to WALL. A host's wall boxes and door headers are
+// the layout's one home for the solid boxes: the visible walls and the
+// walk-mode Octree (WalkPhysics.tsx's WalkColliders) both build from them, so
+// what a walker sees is what a walker bumps.
 export interface WallSegment {
   pos: readonly [number, number, number];
   size: readonly [number, number, number]; // [width(x), height, depth(z)]
 }
 
-// The doorways cut through the main room's walls. Each is a gap exactly
+// The doorways cut through the hub room's walls. Each is a gap exactly
 // as wide as the room behind it (see the note above), and
-// DOOR_H high: a door leaf stands on the floor and a header (DOOR_HEADERS)
+// DOOR_H high: a door leaf stands on the floor and a header
 // fills the gap from there up to WALL.
 export interface Doorway {
   /** Middle of the gap, on the wall's centre-line. */
@@ -100,10 +100,10 @@ export const DOOR_HEADER_H = WALL - DOOR_H;
 // so a door's frame reaches halfWidth + DOOR_POST_W from its centre, and
 // anything hung on the wall beside a door starts past that, not at halfWidth.
 export const DOOR_POST_W = 0.3;
-// Each room's name hangs on its header, on the main room's own side — the hub
+// Each room's name hangs on its header, on the hub room's own side — the hub
 // every walker passes through before choosing a door — as a banner about the
 // gap's width, centred in the header. A room with no door carries none. `rotationY` puts the banner's face toward
-// the main room, the same convention wall panels and plaques use on
+// the hub room, the same convention wall panels and plaques use on
 // their own walls (rotationY=0 faces +z, Math.PI faces -z, ±PI/2 faces ±x).
 export interface DoorSignSpec {
   label: string;
@@ -138,8 +138,8 @@ export const COLLISION_ITERATIONS = 4;
 // doorway edge), so gating a jump on that one frame's exact reading drops
 // presses with no retry until release+re-press. Values lean toward the
 // tighter, action-platformer end of standard game-dev ranges (coyote
-// ~70-140ms, buffer ~100-150ms) since SITE is about to get a precision-jump
-// room, not the most forgiving casual-mobile end.
+// ~70-140ms, buffer ~100-150ms) since the world may include precision jumps,
+// not the most forgiving casual-mobile end.
 export const JUMP_BUFFER_MS = 130;
 export const COYOTE_MS = 100;
 
@@ -229,7 +229,8 @@ export interface WallRun {
   rightInset: number;
 }
 
-// A walkable-floor graph the demon game steers over (doom/doomNav.ts).
+// A walkable-floor graph the demon game steers over (doom/doomNav.ts). Zones
+// are named areas of the floor plan (main, a corridor, an arena).
 export type NavZone = "main" | "tunnel" | "undercroft";
 
 /** One walkable floor rectangle. Cells never overlap: a body is in exactly

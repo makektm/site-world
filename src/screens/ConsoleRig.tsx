@@ -1,11 +1,11 @@
-// The console screen-projection + camera-approach subsystem for the SITE
+// The console screen-projection + camera-approach subsystem for the
 // viewport.
 //
 // A machine's console powers on when you ask for it: walk up to a machine and
 // press E, or click one in orbit and the camera flies you there. The
 // console is a green-phosphor screen on a mast in front of the machine — a
 // 3D bezel, a halo and a pool of light standing in for bloom, around a DOM
-// screen (MachineConsole). Green means a machine's screen is on; everything
+// screen (the host's console). Green means a machine's screen is on; everything
 // else stays the cream drawing. Only the powered console mounts DOM; every
 // other machine shows a standby cursor.
 //

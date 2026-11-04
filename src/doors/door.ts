@@ -1,9 +1,9 @@
-// What a SITE door is, as data. The list of this world's doors is
-// worldDoors.ts; the engine (SiteDoors.tsx, DoorColliders) reads any list of
-// these. A door opens when a walker is within reach of the middle of its gap
+// What a site-world door is, as data. The list of a world's doors is the
+// host's; the engine (Doors.tsx, DoorColliders) reads any list of these. A door opens when a walker is within reach of the middle of its gap
 // (`doorway.center`).
 import type { Doorway } from "../core/engine";
 
+/** A door as data: id, three-letter code, the doorway (centre, axis, half-width) and how it opens. */
 export type SiteDoor = {
   id: string;
   /** The short stencil on the frame's ID plate. */

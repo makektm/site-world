@@ -1,5 +1,5 @@
 // A one-room floor plan for the game's tests: a single cell walled on all
-// four sides, the way the main room is. Test-only — nothing in the app
+// four sides, the way a plain room is. Test-only — nothing in the app
 // imports it.
 import type { NavCellSpec } from "../core/engine";
 import { buildNav, type Nav, type Rect } from "./doomNav";

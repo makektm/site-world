@@ -14,14 +14,23 @@ export const myRoom = defineRoom({
 });
 ```
 
-Then add it to the `rooms` list you pass `<SiteWorld>`. Nothing else changes.
+Then add it to the `rooms` list you pass `<SiteWorld>`. Nothing else changes. Two rules: the `rooms` list must
+be a **module constant** (hooks run per room in list order), and every terminal `id` must be unique across
+all rooms (`terminals.get(id)` throws on an unknown id).
 
 ## Checklist for a terminal
 
 1. `terminals: [{ id, stand, flyOffset? }]` — `stand` is the plinth (the orbit fly-in faces from it);
    `flyOffset` makes the orbit camera fly in to the screen.
 2. In `Scene`: `<Plinth at onActivate>`; `<PointProximity enabled point onNear>` (walk-up);
-   `{term.rig && <ConsoleRig … powered={term.on} screen={term.screenRef} onPoweredOff={() => term.setRig(false)} />}`.
+   and the screen, with its full prop list:
+   ```tsx
+   {term.rig && (
+     <ConsoleRig px={x} pz={z} offset={0.46} anchor={term.anchor} mode={env.mode} reduce={env.reduce}
+       powered={term.on} screen={term.screenRef} onPoweredOff={() => term.setRig(false)} />
+   )}
+   ```
+   (`px`/`pz` are the plinth; `offset` how far in front of it the screen stands.)
    Pass `onActivate` only in orbit mode (`env.mode !== "walk"`).
 3. In `Overlay`: `<div className="sw-screen" ref={term.screenRef} style={{visibility:"hidden"}}>`
    containing a `CONSOLE_PX_W x CONSOLE_PX_H` element while `term.rig`. Use `term.on ? term.focus : 0` as

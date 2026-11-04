@@ -1,4 +1,4 @@
-// How a demon gets from wherever it is to wherever it is going, on SITE's
+// How a demon gets from wherever it is to wherever it is going, on the world's
 // floor plan: a handful of non-overlapping floor rectangles (cells) and the
 // edges between them it may cross (portals). A route is a portal-to-portal
 // hop list computed once for every pair of cells when the floor plan is
@@ -173,7 +173,7 @@ export function floorY(nav: Nav, cell: number, _x: number, z: number): number {
 
 /** Where to aim a body for: the point `quarry` stands at, placed on the
  * plan. Off the plan (the walker in a side room) it is pulled onto the
- * first cell — the main room, which every side room opens off — at the
+ * first cell — the hub room, which every side room opens off — at the
  * nearest point, so a demon presses at that room's doorway. Writes
  * `out` and returns its cell. */
 export function locate(nav: Nav, x: number, z: number, out: Point): number {

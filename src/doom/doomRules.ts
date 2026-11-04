@@ -211,7 +211,7 @@ const ACCEL = 7;
 const KNOCKBACK_DECAY = 7;
 const SEPARATION_GAIN = 1.6;
 // Off the walker's trail — heading for a waypoint — the flanking swing is
-// mostly held back: in a 2.4m tunnel a full swing only steers into walls.
+// mostly held back: in a 2.4m corridor a full swing only steers into walls.
 const ROUTE_WOBBLE = 0.3;
 
 const heading: Point = { x: 0, z: 0 };

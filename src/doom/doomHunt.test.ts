@@ -9,7 +9,7 @@ import {
 } from "./doomHunt";
 import { wallsAround } from "./testNav";
 
-// One 20m room with a 6m screen down its middle, and a tunnel off it.
+// One 20m room with a 6m screen down its middle, and a corridor off it.
 const ROOM: NavCellSpec = { id: "room", zone: "main", minX: -10, maxX: 10, minZ: -10, maxZ: 10, y: 0 };
 const TUNNEL: NavCellSpec = { id: "tunnel", zone: "tunnel", minX: 10, maxX: 20, minZ: -1, maxZ: 1, y: 0 };
 const SCREEN = { minX: -0.2, maxX: 0.2, minZ: -3, maxZ: 3 };

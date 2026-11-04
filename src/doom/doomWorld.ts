@@ -13,8 +13,8 @@
 // `rosterDirty` flag is how React learns it has to re-render that list; it
 // never re-renders for a demon moving.
 //
-// Demons move on SITE's floor plan (doomNav.ts) — the main room, the
-// Undercroft tunnel and the arena at its end — and know only what they can
+// Demons move on the world's floor plan (doomNav.ts) — rooms, corridors
+// and arenas, grouped into zones — and know only what they can
 // see, smell or hear of the walker (doomHunt.ts).
 import type { NavZone } from "../core/engine";
 import { cellAt, floorY, locate, routeToward, zoneOf, type Nav, type Point } from "./doomNav";
@@ -123,7 +123,7 @@ export interface DoomConfig {
   walls: readonly WallBox[];
   ceiling: number;
   /** Summoning points, [x, z], by the zone they stand in. A wave rises in
-   * the walker's own zone — in the tunnel, from both ends of it. */
+   * the walker's own zone — in a corridor, from both ends of it. */
   rifts: Readonly<Record<"main" | "undercroft", readonly (readonly [number, number])[]>>;
   /** Eye height over the feet: where the walker's feet are is the camera's
    * height less this, for what can reach them. */

@@ -84,11 +84,13 @@ function DeployFlight({ deploy, to, top, reduce, onDone }: {
   const ey = top;
   // Higher for longer trips, and always well over the walls between.
   const peak = Math.max(sy, ey) + 2 + Math.hypot(ex - sx, ez - sz) * 0.12;
-  const at = (k: number): [number, number, number] => {
+  // Written straight into the sprite: a fresh array per sprite per frame is
+  // garbage for every flight in the air.
+  const atInto = (k: number, out: { set: (x: number, y: number, z: number) => unknown }) => {
     const a = (1 - k) * (1 - k);
     const b = 2 * (1 - k) * k;
     const c = k * k;
-    return [a * sx + b * ((sx + ex) / 2) + c * ex, a * sy + b * peak + c * ey, a * sz + b * ((sz + ez) / 2) + c * ez];
+    out.set(a * sx + b * ((sx + ex) / 2) + c * ex, a * sy + b * peak + c * ey, a * sz + b * ((sz + ez) / 2) + c * ez);
   };
   useFrame(({ clock }) => {
     t0.current ??= clock.elapsedTime;
@@ -98,13 +100,13 @@ function DeployFlight({ deploy, to, top, reduce, onDone }: {
     const flash = reduce ? 0.5 : (t - FLY_DELAY - FLY_S) / FLASH_S;
     if (head.current) {
       head.current.visible = fly >= 0 && fly < 1;
-      if (head.current.visible) head.current.position.set(...at(fly));
+      if (head.current.visible) atInto(fly, head.current.position);
     }
     tails.current.forEach((s, i) => {
       if (!s) return;
       const k = fly - (i + 1) * 0.035;
       s.visible = k >= 0 && fly < 1;
-      if (s.visible) s.position.set(...at(k));
+      if (s.visible) atInto(k, s.position);
     });
     const showFlash = flash >= 0 && flash < 1;
     if (ring.current && ringMat.current) {

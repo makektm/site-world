@@ -32,7 +32,9 @@ export interface GoToPaletteProps {
   targets: readonly GoToTarget[];
   /** The pick. The palette closes itself afterwards. */
   onGo: (target: GoToTarget) => void;
-  /** "/" and Ctrl/Cmd+K open it. Default true. */
+  /** "/" and Ctrl/Cmd+K open it, from a window keydown listener that calls
+   * preventDefault on them (unless focus is in a text field). Default true;
+   * pass false if the host already uses either key and opens it itself. */
   hotkeys?: boolean;
   placeholder?: string;
   limit?: number;
@@ -40,7 +42,12 @@ export interface GoToPaletteProps {
   style?: CSSProperties;
 }
 
-/** A fuzzy go-to search over host targets; Enter calls `onGo`. */
+function isCtrlK(event: { ctrlKey: boolean; metaKey: boolean; altKey: boolean; code: string }): boolean {
+  return (event.ctrlKey || event.metaKey) && !event.altKey && event.code === "KeyK";
+}
+
+/** A fuzzy go-to search over host targets; Enter calls `onGo`. Unless
+ * `hotkeys={false}`, it claims "/" and Ctrl/Cmd+K window-wide while mounted. */
 export function GoToPalette({
   open, onOpenChange, targets, onGo, hotkeys = true, placeholder = "go to…", limit = 12, className, style,
 }: GoToPaletteProps) {
@@ -51,14 +58,10 @@ export function GoToPalette({
   const at = Math.min(cursor, Math.max(0, results.length - 1));
 
   useKeydown((event) => {
-    const ctrlK = (event.ctrlKey || event.metaKey) && !event.altKey && event.code === "KeyK";
-    if (open) {
-      if (ctrlK) {
-        event.preventDefault();
-        onOpenChange(false);
-      }
-      return;
-    }
+    // While open, keys land in the dialog's own onKeyDown, which stops them
+    // before they reach the window (Ctrl/Cmd+K to close is handled there).
+    if (open) return;
+    const ctrlK = isCtrlK(event);
     const slash = event.key === "/" && !event.ctrlKey && !event.metaKey && !event.altKey;
     if (!ctrlK && !slash) return;
     if (isTypingTarget(event.target) || isChromeOpen()) return;
@@ -66,7 +69,7 @@ export function GoToPalette({
     setQuery("");
     setCursor(0);
     onOpenChange(true);
-  }, hotkeys || open);
+  }, hotkeys);
 
   // Opening hands the keyboard to the input and the mouse back to the person:
   // a walker's locked pointer could not reach the list.
@@ -92,7 +95,7 @@ export function GoToPalette({
       onKeyDown={(e) => {
         // Kept from the world's window listeners (walk, E, layer digits).
         e.stopPropagation();
-        if (e.key === "Escape") {
+        if (e.key === "Escape" || isCtrlK(e)) {
           e.preventDefault();
           close();
         } else if (e.key === "ArrowDown") {

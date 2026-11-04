@@ -12,7 +12,9 @@ import { hasCommandModifier, useKeydown } from "./useKeydown";
 
 export interface LayerBarProps {
   layers: LayersApi;
-  /** 1..9 toggle the first nine layers. Default true. */
+  /** 1..9 toggle the first nine layers, from a window keydown listener that
+   * claims those digits while mounted. Default true; pass false if the host
+   * uses the digits itself. */
   hotkeys?: boolean;
   className?: string;
   style?: CSSProperties;

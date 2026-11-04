@@ -62,8 +62,23 @@ export function polylineLength(path: readonly FloorPoint[]): number {
  * outgrows its belt keeps queuing in a straight line instead of collapsing on
  * the endpoint. */
 export function sampleLine(path: readonly FloorPoint[], s: number): LineSample {
-  if (path.length === 0) return { x: 0, z: 0, rotY: 0 };
-  if (path.length === 1) return { x: path[0]![0], z: path[0]![1], rotY: 0 };
+  return sampleLineInto(path, s, { x: 0, z: 0, rotY: 0 });
+}
+
+/** `sampleLine` written into `out`, for a per-frame caller that must not
+ * allocate (every crate on a belt samples it every frame). */
+export function sampleLineInto(path: readonly FloorPoint[], s: number, out: LineSample): LineSample {
+  out.rotY = 0;
+  if (path.length === 0) {
+    out.x = 0;
+    out.z = 0;
+    return out;
+  }
+  if (path.length === 1) {
+    out.x = path[0]![0];
+    out.z = path[0]![1];
+    return out;
+  }
   let start = 0;
   for (let i = 1; i < path.length; i += 1) {
     const a = path[i - 1]!;
@@ -75,12 +90,17 @@ export function sampleLine(path: readonly FloorPoint[], s: number): LineSample {
       const t = i === 1 ? (s - start) / len : Math.max(0, (s - start) / len);
       const dx = (b[0] - a[0]) / len;
       const dz = (b[1] - a[1]) / len;
-      return { x: a[0] + dx * len * t, z: a[1] + dz * len * t, rotY: Math.atan2(dx, dz) };
+      out.x = a[0] + dx * len * t;
+      out.z = a[1] + dz * len * t;
+      out.rotY = Math.atan2(dx, dz);
+      return out;
     }
     start += len;
   }
   const end = path[path.length - 1]!;
-  return { x: end[0], z: end[1], rotY: 0 };
+  out.x = end[0];
+  out.z = end[1];
+  return out;
 }
 
 /** Moves a sample `side` metres across the belt, along its local +x. */

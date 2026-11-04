@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  layoutWorkLine, nearestAlong, offsetAcross, pileRows, pileSlot, polylineLength, queueStatus, sampleLine, stationAlong,
+  layoutWorkLine, nearestAlong, offsetAcross, pileRows, pileSlot, polylineLength, queueStatus, sampleLine, sampleLineInto, stationAlong,
   type FloorPoint, type WorkItem,
 } from "./workLineLayout";
 
@@ -114,5 +114,17 @@ describe("layoutWorkLine", () => {
   it("clamps stages to the stations it has", () => {
     const out = layoutWorkLine(g, [item("a", 7, "queued"), item("b", -1, "queued")]);
     expect(out.counts).toEqual([1, 0, 1]);
+  });
+});
+
+describe("sampleLineInto", () => {
+  it("writes the same numbers as sampleLine into the object it is given", () => {
+    const path: FloorPoint[] = [[0, 0], [0, 10], [5, 10]];
+    const out = { x: 9, z: 9, rotY: 9 };
+    for (const s of [-1, 0, 4, 12, 40]) {
+      expect(sampleLineInto(path, s, out)).toBe(out);
+      expect(out).toEqual(sampleLine(path, s));
+    }
+    expect(sampleLineInto([], 3, out)).toEqual({ x: 0, z: 0, rotY: 0 });
   });
 });

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { AGENT_WALK_SPEED, floorHeading, pathLength, samplePath, walkPath } from "./agentPath";
+import {
+  AGENT_WALK_SPEED, floorHeading, pathLength, preparePath, samplePath, samplePathInto, walkPath, type PathPoint,
+} from "./agentPath";
 
 const L = [[0, 0], [4, 0], [4, 3]] as const;
 
@@ -66,5 +68,21 @@ describe("agentPath", () => {
     expect(s.x).toBeCloseTo(2 * AGENT_WALK_SPEED);
     expect(walkPath(L, 1, 3).x).toBeCloseTo(3);
     expect(walkPath(L, -5).x).toBe(0);
+  });
+});
+
+describe("samplePathInto", () => {
+  it("matches samplePath on open, looped, paused and degenerate paths", () => {
+    const paths: PathPoint[][] = [[], [[2, 3]], [[0, 0], [4, 0], [4, 0], [4, 3]], [[0, 0], [0, 0]]];
+    const out = { x: 0, z: 0, heading: 0, distance: 0, done: false };
+    for (const pts of paths) {
+      for (const loop of [false, true]) {
+        const prepared = preparePath(pts, loop);
+        for (const d of [-2, 0, 1.5, 4, 6.9, 7, 20]) {
+          expect(samplePathInto(prepared, d, out)).toBe(out);
+          expect({ ...out }).toEqual(samplePath(pts, d, loop));
+        }
+      }
+    }
   });
 });

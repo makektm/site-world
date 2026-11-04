@@ -90,12 +90,21 @@ export function Selectable({
     };
   }, [store, ref, disabled]);
 
-  // Leaving the scene (or being disabled) must not strand a hover, a
-  // selection glow's owner, or the pointer cursor.
+  const live = !disabled && mode === "orbit";
+
+  // Leaving the scene, being disabled, or switching to walk mode must not
+  // strand a hover or the pointer cursor: the pointer handlers are removed
+  // with `live`, so R3F never delivers the pointerout that would clear them.
   useEffect(() => {
-    if (!disabled) return;
+    if (live) return;
+    // In walk mode the crosshair owns the hover; only the pointer's is dropped.
+    if (!cursorSet.current && !disabled) return;
     store.unhover(ref);
-  }, [disabled, store, ref]);
+    if (cursorSet.current) {
+      gl.domElement.style.cursor = "";
+      cursorSet.current = false;
+    }
+  }, [live, disabled, store, ref, gl]);
   useEffect(() => () => {
     store.unhover(ref);
     if (cursorSet.current) {
@@ -104,7 +113,6 @@ export function Selectable({
     }
   }, [store, ref, gl]);
 
-  const live = !disabled && mode === "orbit";
   const locked = () => typeof document !== "undefined" && document.pointerLockElement != null;
   const setCursor = (on: boolean) => {
     if (on === cursorSet.current) return;

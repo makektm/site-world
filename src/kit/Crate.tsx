@@ -46,13 +46,23 @@ export function Crate({
 }: CrateProps) {
   const c = color ?? CRATE_COLOR[status];
   const [hover, setHover] = useState(false);
-  // A pointer cursor set on hover must not outlive the hover (see Plinth.tsx).
+  // A hover must not outlive itself: unmounting or going inert sends no
+  // pointerout, so the cleanup drops the cursor it set (only if it set one),
+  // the hover look, and tells the host.
   const hovered = useRef(false);
+  const cursorSet = useRef(false);
+  const onHoverRef = useRef(onHover);
+  onHoverRef.current = onHover;
   const interactive = onSelect !== undefined || onHover !== undefined;
   useEffect(() => () => {
+    if (cursorSet.current) {
+      cursorSet.current = false;
+      document.body.style.cursor = "";
+    }
     if (!hovered.current) return;
     hovered.current = false;
-    document.body.style.cursor = "default";
+    setHover(false);
+    onHoverRef.current?.(false);
   }, [interactive]);
   const handlers = interactive
     ? {
@@ -65,13 +75,19 @@ export function Crate({
         e.stopPropagation();
         hovered.current = true;
         setHover(true);
-        if (onSelect) document.body.style.cursor = "pointer";
+        if (onSelect) {
+          cursorSet.current = true;
+          document.body.style.cursor = "pointer";
+        }
         onHover?.(true);
       },
       onPointerOut: () => {
         hovered.current = false;
         setHover(false);
-        document.body.style.cursor = "default";
+        if (cursorSet.current) {
+          cursorSet.current = false;
+          document.body.style.cursor = "";
+        }
         onHover?.(false);
       },
     }
@@ -79,13 +95,13 @@ export function Crate({
   const loud = status === "failing" || status === "failed";
   return (
     <group position={position as [number, number, number]} rotation={[0, rotationY, 0]}>
-      <mesh position={[0, size / 2, 0]} scale={hover ? 1.08 : 1} {...handlers}>
+      <mesh position={[0, size / 2, 0]} scale={hover && interactive ? 1.08 : 1} {...handlers}>
         <boxGeometry args={[size, size, size]} />
         <meshBasicMaterial color={INK} />
         <Edges color={c} />
       </mesh>
       {label && <Lid label={label} color={c} size={size} />}
-      {(selected || hover || loud) && (
+      {(selected || (hover && interactive) || loud) && (
         <sprite position={[0, size / 2, 0]} scale={[size * (selected ? 4 : 3), size * (selected ? 4 : 3), 1]}>
           <spriteMaterial
             map={getGlowTexture()}

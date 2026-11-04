@@ -56,14 +56,16 @@ export function PresenceMarker({
   const motion = useRef({ x: position[0], z: position[1], heading: heading ?? 0 }).current;
   const dim = away ? 0.4 : 1;
 
-  // Same cursor discipline as Plinth: reset it if we unmount or go inert mid-hover.
+  // Unmounting or going inert mid-hover sends no pointerout: reset the cursor
+  // (to the host's, not "default") and the outline in the cleanup.
   const [hovered, setHovered] = useState(false);
   const hoveredRef = useRef(false);
   const active = onSelect !== undefined;
   useEffect(() => () => {
     if (!hoveredRef.current) return;
     hoveredRef.current = false;
-    document.body.style.cursor = "default";
+    setHovered(false);
+    document.body.style.cursor = "";
   }, [active]);
 
   const setBody = (el: Group | null) => {
@@ -97,7 +99,7 @@ export function PresenceMarker({
     }
   });
 
-  const outline = selected || hovered ? PAPER : color;
+  const outline = selected || (hovered && active) ? PAPER : color;
   return (
     <group ref={setBody}>
       <group
@@ -117,7 +119,7 @@ export function PresenceMarker({
           setHovered(false);
           if (!hoveredRef.current) return;
           hoveredRef.current = false;
-          document.body.style.cursor = "default";
+          document.body.style.cursor = "";
         }}
       >
         <mesh position={[0, 0.3 + TORSO_H / 2, 0]}>

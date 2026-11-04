@@ -25,6 +25,7 @@
   "files": [
     "src",
     "!src/**/*.test.ts",
+    "!src/**/*.test.tsx",
     "!src/doom/testNav.ts",
     "docs",
     "README.md",

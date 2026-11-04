@@ -46,6 +46,15 @@ describe("GoToPalette", () => {
     fireEvent.keyDown(input, { key: "Escape" });
     expect(screen.queryByRole("dialog")).toBeNull();
   });
+
+  it("closes on Ctrl+K typed in its own input, and keeps the browser's shortcut from running", () => {
+    render(<Palette onGo={() => {}} />);
+    key("k", "KeyK", { ctrlKey: true });
+    const input = screen.getByRole("textbox");
+    const notCancelled = fireEvent.keyDown(input, { key: "k", code: "KeyK", ctrlKey: true });
+    expect(notCancelled).toBe(false);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
 });
 
 describe("LayerBar", () => {

@@ -103,7 +103,7 @@ export function Station({
   useEffect(() => () => {
     if (!hovered.current) return;
     hovered.current = false;
-    document.body.style.cursor = "default";
+    document.body.style.cursor = "";
   }, [active]);
   const pointer = onSelect
     ? {
@@ -117,7 +117,7 @@ export function Station({
       },
       onPointerOut: () => {
         hovered.current = false;
-        document.body.style.cursor = "default";
+        document.body.style.cursor = "";
       },
     }
     : {};

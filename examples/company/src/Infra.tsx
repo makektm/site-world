@@ -6,7 +6,7 @@
 // are Selectables, so each database and third party can be inspected.
 import { useMemo } from "react";
 import {
-  WALL, FloorHeat, INFRA_HEALTH_COLOR, LoadingDock, Meter, QueuePipe, Selectable, Tank, bayOffsets, bayRowWidth, compactNumber,
+  WALL, DOCK_BAY_GAP, FloorHeat, INFRA_HEALTH_COLOR, LoadingDock, Meter, QueuePipe, Selectable, Tank, bayOffsets, bayRowWidth, compactNumber,
   type DockBay, type HeatPoint, type WallSegment,
 } from "site-world";
 import type { FactoryDomain, FactoryService } from "./factory/catalog";
@@ -40,7 +40,7 @@ export const BUDGET: Record<FactoryDomain, { usd: number; tokens: number }> = {
 export function infraSolids(databases: readonly { owner: string }[]): WallSegment[] {
   const deck: WallSegment = {
     pos: [DOCK_AT[0], 0.5, DOCK_AT[1]],
-    size: [bayRowWidth(EXTERNALS.length, DOCK_BAY_W) + 0.6, 1, 2.4],
+    size: [bayRowWidth(EXTERNALS.length, DOCK_BAY_W, DOCK_BAY_GAP) + 0.6, 1, 2.4],
   };
   const tanks = databases.flatMap((db): WallSegment[] => {
     const slot = PLAN.slotByName[db.owner];
@@ -93,7 +93,7 @@ const BAY_D = 2.4;
 /** One invisible pick box per dock bay, in the dock's own frame: the dock is
  * one component, but each third party in it is its own thing to inspect. */
 function BayPicks({ bays, mode, reduce }: { bays: readonly DockBay[]; mode: Mode; reduce: boolean }) {
-  const xs = bayOffsets(bays.length, DOCK_BAY_W);
+  const xs = bayOffsets(bays.length, DOCK_BAY_W, DOCK_BAY_GAP);
   return (
     <group position={[DOCK_AT[0], 0, DOCK_AT[1]]} rotation={[0, Math.PI, 0]}>
       {bays.map((b, i) => (

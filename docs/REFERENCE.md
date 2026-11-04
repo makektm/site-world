@@ -608,6 +608,9 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `floorHeading` | function | The heading (rotation about y) that turns +z toward `to` from `from`; 0 when the two coincide. |
 | `pathLength` | function | Total length of the path in metres; `loop` adds the leg from the last point back to the first. |
 | `samplePath` | function | The point `distance` metres along the path. |
+| `PreparedPath` | interface | A path's real legs and their lengths, worked out once, for a caller that samples the same path every frame (a walking figure) and must not allocate. |
+| `preparePath` | function | Prepares `points` for `samplePathInto`. |
+| `samplePathInto` | function | `samplePath` over a prepared path, written into `out`. |
 | `walkPath` | function | Where a walker is `elapsed` seconds after setting off along the path at `speed` m/s. |
 
 ### `kit/agentState`
@@ -672,6 +675,7 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `LineSample` | interface | A sample of a belt: its point, and the rotation about y that turns local +z downstream (so local +x points across the belt, to the left of someone facing downstream). |
 | `polylineLength` | function | Total length of a polyline, metres. |
 | `sampleLine` | function | The point `s` metres along `path`, with its heading. |
+| `sampleLineInto` | function | `sampleLine` written into `out`, for a per-frame caller that must not allocate (every crate on a belt samples it every frame). |
 | `offsetAcross` | function | Moves a sample `side` metres across the belt, along its local +x. |
 | `nearestAlong` | function | The distance along `path` of the point on it nearest [x, z]. |
 | `stationAlong` | function | Each station's distance along a belt of `length`: its own `at` (a 0..1 fraction) where given, else evenly spaced with room before the first for its pile and room after the last for finished work to leave. |
@@ -699,6 +703,7 @@ Everything below is exported from `site-world`. One line each; read the source f
 | --- | --- | --- |
 | `DockBay` | interface |  |
 | `LoadingDockProps` | interface |  |
+| `DOCK_BAY_GAP` | const | Metres between bays. |
 | `LoadingDock` | function | A platform of bays for external dependencies, each with crates, a status light and a latency/error badge. |
 
 ### `kit/Meter`

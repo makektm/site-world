@@ -39,7 +39,9 @@ export interface LoadingDockProps {
 
 const DECK_H = 0.35;
 const DECK_D = 2.4;
-const GAP = 0.25;
+/** Metres between bays. Exported so a host laying pick boxes, colliders or
+ * camera targets over the bays uses the spacing that is drawn. */
+export const DOCK_BAY_GAP = 0.25;
 // Error rate above which the badge's figure turns critical, matching the
 // company example's dashboard threshold.
 const ERR_HOT = 0.02;
@@ -151,8 +153,8 @@ function Bay({ bay, x, width, reduce }: { bay: DockBay; x: number; width: number
 export function LoadingDock({
   position, rotationY = 0, title = "LOADING DOCK", bays, bayWidth = 1.7, reduce = false,
 }: LoadingDockProps) {
-  const xs = bayOffsets(bays.length, bayWidth, GAP);
-  const deckW = Math.max(bayWidth, bayRowWidth(bays.length, bayWidth, GAP)) + 0.6;
+  const xs = bayOffsets(bays.length, bayWidth, DOCK_BAY_GAP);
+  const deckW = Math.max(bayWidth, bayRowWidth(bays.length, bayWidth, DOCK_BAY_GAP)) + 0.6;
   const worst: InfraHealth = bays.some((b) => b.status === "down") ? "down" : bays.some((b) => b.status === "warn") ? "warn" : "ok";
   const [x, y, z] = position;
   return (

@@ -78,6 +78,65 @@ export function samplePath(points: readonly PathPoint[], distance: number, loop 
   return { x: first[0], z: first[1], heading: 0, distance: d, done };
 }
 
+/** A path's real legs and their lengths, worked out once, for a caller that
+ * samples the same path every frame (a walking figure) and must not allocate. */
+export interface PreparedPath {
+  /** Flat [ax, az, bx, bz] per real (non-zero) leg. */
+  legs: Float64Array;
+  lengths: Float64Array;
+  total: number;
+  first: PathPoint | undefined;
+  loop: boolean;
+}
+
+/** Prepares `points` for `samplePathInto`. */
+export function preparePath(points: readonly PathPoint[], loop = false): PreparedPath {
+  const real = legs(points, loop).filter((leg) => legLength(leg) > 1e-9);
+  const flat = new Float64Array(real.length * 4);
+  const lengths = new Float64Array(real.length);
+  let total = 0;
+  real.forEach(([a, b], i) => {
+    flat.set([a[0], a[1], b[0], b[1]], i * 4);
+    lengths[i] = legLength([a, b]);
+    total += lengths[i]!;
+  });
+  return { legs: flat, lengths, total, first: points[0], loop };
+}
+
+/** `samplePath` over a prepared path, written into `out`. Same numbers. */
+export function samplePathInto(path: PreparedPath, distance: number, out: PathSample): PathSample {
+  const { legs: L, lengths, total, first, loop } = path;
+  const n = lengths.length;
+  if (!first || n === 0 || total === 0) {
+    out.x = first?.[0] ?? 0;
+    out.z = first?.[1] ?? 0;
+    out.heading = 0;
+    out.distance = 0;
+    out.done = true;
+    return out;
+  }
+  const d = loop ? ((distance % total) + total) % total : Math.min(Math.max(distance, 0), total);
+  out.distance = d;
+  out.done = !loop && distance >= total;
+  let left = d;
+  for (let i = 0; i < n; i += 1) {
+    const len = lengths[i]!;
+    if (left <= len || i === n - 1) {
+      const t = Math.min(left / len, 1);
+      const ax = L[i * 4]!;
+      const az = L[i * 4 + 1]!;
+      const bx = L[i * 4 + 2]!;
+      const bz = L[i * 4 + 3]!;
+      out.x = ax + (bx - ax) * t;
+      out.z = az + (bz - az) * t;
+      out.heading = Math.atan2(bx - ax, bz - az);
+      return out;
+    }
+    left -= len;
+  }
+  return out;
+}
+
 /** Where a walker is `elapsed` seconds after setting off along the path at `speed` m/s. */
 export function walkPath(
   points: readonly PathPoint[],

@@ -2,7 +2,7 @@
 // their pylons, rooms and wings at their middles, agents and people where
 // they stand now, databases at their tanks, third parties at their dock bay.
 // Pure, from the plan and a factory state.
-import { bayOffsets, type GoToTarget, type Point3 } from "site-world";
+import { DOCK_BAY_GAP, bayOffsets, type GoToTarget, type Point3 } from "site-world";
 import type { AgentState, HumanState } from "./factory/agents";
 import type { FactoryService } from "./factory/catalog";
 import type { InfraState } from "./factory/infra";
@@ -24,7 +24,7 @@ const at = ([x, z]: readonly [number, number], y: number): Point3 => [x, y, z];
 
 /** Where a third party's bay stands: the dock is turned to face the building, so its bays run right to left. */
 export function bayPoint(index: number, count: number): Point3 {
-  const xs = bayOffsets(count, DOCK_BAY_W);
+  const xs = bayOffsets(count, DOCK_BAY_W, DOCK_BAY_GAP);
   return [DOCK_AT[0] - xs[index]!, 1.2, DOCK_AT[1]];
 }
 

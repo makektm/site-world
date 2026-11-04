@@ -24,7 +24,9 @@ import { INK, PAPER, PAPER_DIM, WALL_FILL, getGlowTexture } from "../core/engine
 import { useCanvasTexture } from "../core/useCanvasTexture";
 import { AgentTrail } from "./AgentTrail";
 import { NameTag } from "./NameTag";
-import { AGENT_WALK_SPEED, floorHeading, samplePath, type PathPoint } from "./agentPath";
+import {
+  AGENT_WALK_SPEED, floorHeading, preparePath, samplePathInto, type PathPoint, type PathSample,
+} from "./agentPath";
 import { AGENT_STATE_COLOR, AGENT_STATE_LABEL, agentBob, agentGlow, type AgentState } from "./agentState";
 
 const BODY_R = 0.17;
@@ -105,18 +107,33 @@ export function AgentFigure({
   // with the same points must not restart a walk halfway along it.
   const pathKey = path && path.length > 0 ? path.map((p) => `${p[0]},${p[1]}`).join(";") : "";
   const walk = useMemo(() => ({ points: path ?? [], walked: 0 }), [pathKey]);
+  // Legs measured once per path, sampled into one scratch reading: every
+  // walking figure samples its path every frame.
+  const prepared = useMemo(() => preparePath(walk.points, loop), [walk, loop]);
+  const sample = useMemo<PathSample>(() => ({ x: 0, z: 0, heading: 0, distance: 0, done: true }), []);
   const motion = useRef({ x: 0, z: 0, heading: heading ?? 0, ready: false });
 
-  // A pointer cursor set on hover must not outlive the hover: unmounting, or
-  // going inert (onSelect removed), sends no pointerout. Same as Plinth.
+  // A hover must not outlive itself: unmounting, or going inert (handlers
+  // removed), sends no pointerout. So the cleanup clears the cursor it set,
+  // the hover ring, and tells the host the hover ended.
   const [hovered, setHovered] = useState(false);
   const hoveredRef = useRef(false);
+  const hoverSent = useRef(false);
+  const onHoverRef = useRef(onHover);
+  onHoverRef.current = onHover;
   const active = onSelect !== undefined;
+  const interactive = active || onHover !== undefined;
   useEffect(() => () => {
-    if (!hoveredRef.current) return;
-    hoveredRef.current = false;
-    document.body.style.cursor = "default";
-  }, [active]);
+    if (hoveredRef.current) {
+      hoveredRef.current = false;
+      document.body.style.cursor = "";
+    }
+    if (hoverSent.current) {
+      hoverSent.current = false;
+      setHovered(false);
+      onHoverRef.current?.(false);
+    }
+  }, [active, interactive]);
 
   // The line from visor to target. Two points rewritten every frame, so it is
   // built here and disposed here, not rebuilt by a JSX component per frame.
@@ -153,7 +170,7 @@ export function AgentFigure({
     let pathDone = true;
     if (pts.length > 0) {
       walk.walked = elapsed !== undefined ? elapsed * speed : walk.walked + dt * speed;
-      const s = samplePath(pts, walk.walked, loop);
+      const s = samplePathInto(prepared, walk.walked, sample);
       gx = s.x;
       gz = s.z;
       gh = pts.length > 1 ? s.heading : undefined;
@@ -242,7 +259,7 @@ export function AgentFigure({
 
   const shownBadge = badge === undefined ? (state === "blocked" ? "?" : null) : badge;
   const tagSub = sublabel ?? AGENT_STATE_LABEL[state];
-  const ring = selected || hovered;
+  const ring = selected || (hovered && interactive);
 
   return (
     <group>
@@ -266,6 +283,7 @@ export function AgentFigure({
               if (!onSelect && !onHover) return;
               event.stopPropagation();
               setHovered(true);
+              hoverSent.current = true;
               onHover?.(true);
               if (!onSelect) return;
               hoveredRef.current = true;
@@ -274,10 +292,11 @@ export function AgentFigure({
             onPointerOut={() => {
               if (!onSelect && !onHover) return;
               setHovered(false);
+              hoverSent.current = false;
               onHover?.(false);
               if (!hoveredRef.current) return;
               hoveredRef.current = false;
-              document.body.style.cursor = "default";
+              document.body.style.cursor = "";
             }}
           >
             <capsuleGeometry args={[BODY_R, BODY_LEN, 4, 14]} />

@@ -20,8 +20,8 @@ import { Conveyor } from "./Conveyor";
 import { Crate } from "./Crate";
 import { Station } from "./Station";
 import {
-  layoutWorkLine, nearestAlong, offsetAcross, pileSlot, polylineLength, queueStatus, sampleLine,
-  type FloorPoint, type Placement, type StationStatus, type WorkItem,
+  layoutWorkLine, nearestAlong, offsetAcross, pileSlot, polylineLength, queueStatus, sampleLine, sampleLineInto,
+  type FloorPoint, type LineSample, type Placement, type StationStatus, type WorkItem,
 } from "./workLineLayout";
 
 /** One stage of a work line. */
@@ -175,11 +175,12 @@ export function WorkLine({
   );
 }
 
-function binSlot(env: MoverEnv, slot: number): Vector3 {
+/** Where reject `slot` sits in the bin, written into `out`. */
+function binSlot(env: MoverEnv, slot: number, out: Vector3): Vector3 {
   const s = pileSlot(slot, { cols: BIN_COLS, rows: BIN_COLS, pitch: env.pitch, layer: env.layer });
   const fwd = s.back - (BIN_COLS * env.pitch) / 2;
   const { x, z, rotY } = env.bin;
-  return new Vector3(
+  return out.set(
     x + Math.cos(rotY) * s.side + Math.sin(rotY) * fwd,
     0.04 + s.up,
     z - Math.sin(rotY) * s.side + Math.cos(rotY) * fwd,
@@ -201,6 +202,13 @@ interface MoverState {
   from: Vector3;
   t: number;
   flash: number;
+  // Per-frame scratch, so a pile of dozens of crates allocates nothing per
+  // frame: the belt sample, and the bin slot cached until the slot or the
+  // line's geometry changes.
+  line: LineSample;
+  want: Vector3;
+  wantSlot: number;
+  wantEnv: MoverEnv | null;
 }
 
 function Mover({ item, place, hiddenInBin, env, size, selected, onSelect, onHover }: {
@@ -222,6 +230,7 @@ function Mover({ item, place, hiddenInBin, env, size, selected, onSelect, onHove
   const [s] = useState<MoverState>(() => {
     const st: MoverState = {
       mode: "gone", along: 0, side: 0, up: 0, rot: 0, pos: new Vector3(), from: new Vector3(), t: 0, flash: Infinity,
+      line: { x: 0, z: 0, rotY: 0 }, want: new Vector3(), wantSlot: -1, wantEnv: null,
     };
     if (place.kind === "belt" || place.kind === "gate") {
       Object.assign(st, { mode: "path", along: place.along, side: place.side, up: place.up });
@@ -231,7 +240,7 @@ function Mover({ item, place, hiddenInBin, env, size, selected, onSelect, onHove
       st.rot = p.rotY;
     } else if (place.kind === "reject") {
       st.mode = "world";
-      st.pos.copy(binSlot(env, place.slot));
+      binSlot(env, place.slot, st.pos);
       st.rot = env.bin.rotY;
     }
     return st;
@@ -276,18 +285,23 @@ function Mover({ item, place, hiddenInBin, env, size, selected, onSelect, onHove
         damp(s, "side", pl.side, MOVE_S * 0.6, dt);
         damp(s, "up", pl.up, MOVE_S * 0.6, dt);
       }
-      const p = sampleLine(e.path, s.along);
-      const [x, z] = offsetAcross(p, s.side);
-      s.pos.set(x, e.beltTop + s.up, z);
+      const p = sampleLineInto(e.path, s.along, s.line);
+      // offsetAcross, inlined: it returns a fresh pair.
+      s.pos.set(p.x + Math.cos(p.rotY) * s.side, e.beltTop + s.up, p.z - Math.sin(p.rotY) * s.side);
       if (e.reduce) s.rot = p.rotY;
       else dampAngle(s, "rot", p.rotY, MOVE_S * 0.6, dt);
     } else if (pl.kind === "reject") {
+      if (s.wantSlot !== pl.slot || s.wantEnv !== e) {
+        binSlot(e, pl.slot, s.want);
+        s.wantSlot = pl.slot;
+        s.wantEnv = e;
+      }
+      const want = s.want;
       if (s.mode === "gone" || s.mode === "fly") {
-        s.pos.copy(binSlot(e, pl.slot));
+        s.pos.copy(want);
         g.scale.setScalar(1);
       }
       s.mode = "world";
-      const want = binSlot(e, pl.slot);
       if (e.reduce) {
         s.pos.copy(want);
       } else {

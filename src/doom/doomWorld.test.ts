@@ -84,6 +84,25 @@ describe("shooting", () => {
     expect(splats[0]!.x).toBeGreaterThan(4);
   });
 
+  it("a muzzle poked through a wall the walker is pressed against does not shoot through it", () => {
+    const w = world();
+    // The wall's near face is at x=8.9; the eye stands a capsule radius off
+    // it, so the muzzle (0.55 ahead) is already past the far face at 9.1.
+    const ex = 8.9 - 0.35;
+    const pressed: Aim = { ex, ey: 1.6, ez: 0, fx: 1, fy: 0, fz: 0, mx: ex + 0.58, my: 1.45, mz: 0.15 };
+    const e = makeEnemy(99, "imp", 10, 0, w.time - SPAWN_TIME - 1, 0);
+    e.lungeReadyAt = Infinity;
+    w.enemies.push(e);
+    const hp = e.hp;
+    w.trigger = true;
+    frames(w, 1, pressed);
+    w.trigger = false;
+    frames(w, 10, pressed);
+    expect(e.hp).toBe(hp);
+    expect(w.bullets.filter((b) => b.active)).toHaveLength(0);
+    expect(w.marks.filter((m) => m.active)).toHaveLength(1);
+  });
+
   it("a round that hits a wall leaves a hole flat on the face it struck", () => {
     const w = world();
     w.trigger = true;
@@ -223,7 +242,9 @@ describe("the fight", () => {
     w.trigger = true;
     frames(w, 60 * 4);
     expect(w.marks.some((m) => m.active)).toBe(true);
+    w.sparks[0]!.active = true; // one still in flight as the walker leaves
     resetWorld(w);
+    expect(w.sparks.every((s) => !s.active)).toBe(true);
     expect(w.director.phase).toBe("idle");
     expect(w.enemies).toHaveLength(0);
     expect(w.bullets.every((b) => !b.active)).toBe(true);

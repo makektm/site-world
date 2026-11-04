@@ -16,11 +16,11 @@
 // MeshDistortMaterial), a crown of horns, four eyes, fists that rise
 // overhead through its slam's wind-up — the tell — and come down on the
 // slam, and drei <Sparkles> hanging round it like heat.
-import { useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ComponentRef, type ReactNode } from "react";
 import { Edges, MeshDistortMaterial, Sparkles, Trail } from "@react-three/drei";
 import { useFrame, type ThreeElements } from "@react-three/fiber";
 import { damp } from "maath/easing";
-import { AdditiveBlending, type Group, type Mesh } from "three";
+import { AdditiveBlending, BufferGeometry, Material, Mesh, type Group } from "three";
 import { CRITICAL, INK, PAPER, WARN } from "../core/engine";
 import { SLAM_COOLDOWN, SLAM_WINDUP, isAlive, type Enemy } from "./doomRules";
 import { doom } from "./doomStore";
@@ -140,6 +140,9 @@ export function ImpBody({ enemy }: { enemy: Enemy }) {
 
 // ---------------------------------------------------------------- wraith
 
+const trailFade = (w: number) => w * w;
+const trailMesh = (ref: unknown): Mesh | null => (ref instanceof Mesh ? ref : null);
+
 export function WraithBody({ enemy }: { enemy: Enemy }) {
   const bob = useRef<Group>(null);
   const shards = useRef<Group>(null);
@@ -156,6 +159,40 @@ export function WraithBody({ enemy }: { enemy: Enemy }) {
     if (shards.current) shards.current.rotation.y += dt * 3.2;
     if (eye.current) eye.current.scale.setScalar(isAlive(enemy) ? 1 + Math.sin(t * 11) * 0.12 : 0.5);
   });
+
+  // drei's <Trail> builds its line geometry and material itself and never
+  // disposes them (R3F only frees what JSX creates), and it rebuilds the
+  // material whenever its children change identity. Keep the child stable,
+  // free a replaced material, and free both when the wraith goes.
+  // Typed as the geometry, but drei 10.7 forwards it to the trail's mesh;
+  // `trailMesh` checks rather than trusts either.
+  const trail = useRef<ComponentRef<typeof Trail>>(null);
+  const trailHead = useMemo(
+    () => (
+      <mesh position={[0, 0.72, 0]}>
+        <sphereGeometry args={[0.04, 6, 4]} />
+        <Glow color={CRITICAL} />
+      </mesh>
+    ),
+    [],
+  );
+  const trailMat = useRef<Material | null>(null);
+  useEffect(() => {
+    const m = trailMesh(trail.current)?.material;
+    if (m instanceof Material && m !== trailMat.current) {
+      trailMat.current?.dispose();
+      trailMat.current = m;
+    }
+  });
+  useEffect(() => {
+    const ref = trail.current as unknown;
+    return () => {
+      const geometry = ref instanceof BufferGeometry ? ref : trailMesh(ref)?.geometry;
+      geometry?.dispose();
+      trailMat.current?.dispose();
+      trailMat.current = null;
+    };
+  }, []);
 
   return (
     <group ref={bob}>
@@ -179,11 +216,8 @@ export function WraithBody({ enemy }: { enemy: Enemy }) {
         </mesh>
       </group>
       {/* the hem's streamer */}
-      <Trail width={0.9} length={5} color={CRITICAL} attenuation={(w) => w * w}>
-        <mesh position={[0, 0.72, 0]}>
-          <sphereGeometry args={[0.04, 6, 4]} />
-          <Glow color={CRITICAL} />
-        </mesh>
+      <Trail ref={trail} width={0.9} length={5} color={CRITICAL} attenuation={trailFade}>
+        {trailHead}
       </Trail>
       {/* shards in orbit */}
       <group ref={shards} position={[0, 1.25, 0]}>
@@ -246,6 +280,13 @@ export function BruteBody({ enemy }: { enemy: Enemy }) {
     if (core.current) core.current.scale.setScalar(enraged ? 1.15 + Math.sin(t * 14) * 0.1 : 1);
   });
 
+  // drei mounts this material as a <primitive>, which R3F never disposes.
+  const distort = useRef<ComponentRef<typeof MeshDistortMaterial>>(null);
+  useEffect(() => {
+    const m = distort.current;
+    return () => m?.dispose();
+  }, []);
+
   return (
     <group>
       <group ref={torso}>
@@ -254,7 +295,7 @@ export function BruteBody({ enemy }: { enemy: Enemy }) {
         </Lined>
         <mesh ref={core} position={[0, 1.4, 0]}>
           <icosahedronGeometry args={[0.34, 6]} />
-          <MeshDistortMaterial color="#000000" emissive={CRITICAL} emissiveIntensity={1.4} distort={0.45} speed={2.5} wireframe toneMapped={false} />
+          <MeshDistortMaterial ref={distort} color="#000000" emissive={CRITICAL} emissiveIntensity={1.4} distort={0.45} speed={2.5} wireframe toneMapped={false} />
         </mesh>
         {/* a ring of spikes round the waist */}
         {SPIKES.map((i) => (

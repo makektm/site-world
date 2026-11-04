@@ -55,8 +55,14 @@ function Tracers() {
       const halo = halos.current[i];
       if (!core || !halo) continue;
       if (!b.active) {
-        core.scale.setScalar(HIDDEN_SCALE);
-        halo.scale.setScalar(HIDDEN_SCALE);
+        // Instances reads matrixWorld before the render pass refreshes it,
+        // so a slot hidden without this is drawn one more frame at full size.
+        if (core.scale.x !== HIDDEN_SCALE) {
+          core.scale.setScalar(HIDDEN_SCALE);
+          halo.scale.setScalar(HIDDEN_SCALE);
+          core.updateMatrixWorld();
+          halo.updateMatrixWorld();
+        }
         continue;
       }
       const speed = Math.hypot(b.vx, b.vy, b.vz) || 1;
@@ -103,7 +109,10 @@ function Sparks() {
       const inst = refs.current[i];
       if (!inst) continue;
       if (!s.active) {
-        inst.scale.setScalar(HIDDEN_SCALE);
+        if (inst.scale.x !== HIDDEN_SCALE) {
+          inst.scale.setScalar(HIDDEN_SCALE);
+          inst.updateMatrixWorld();
+        }
         continue;
       }
       inst.position.set(s.x, s.y, s.z);

@@ -26,6 +26,15 @@ export function PointProximity({
       onNear(false);
     }
   }, [enabled, onNear]);
+  // Unmounting while near must say so too, or a parent keeps showing a
+  // prompt (or an open door) for something that is gone.
+  const onNearRef = useRef(onNear);
+  onNearRef.current = onNear;
+  useEffect(() => () => {
+    if (!inside.current) return;
+    inside.current = false;
+    onNearRef.current(false);
+  }, []);
   useFrame(({ camera }) => {
     if (!enabled) return;
     camera.getWorldDirection(forward);

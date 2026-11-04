@@ -45,6 +45,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
+import type { Camera } from "three";
 import { isChromeOpen, isTypingTarget } from "../core/keys";
 import { CAMERA_PRIORITY } from "../core/engine";
 import { Demon } from "./Demon";
@@ -185,7 +186,6 @@ export function DoomRig({
   switchAt: SwitchAt;
 }) {
   const { camera } = useThree();
-  const hud = useDoomHud();
   const summon = useCallback(() => {
     wakeAudio();
     pullSwitch(doom, doomAudio);
@@ -202,7 +202,14 @@ export function DoomRig({
       {/* 4 (toggleHud) puts the gun away with the HUD — a walker asking the
           screen back to itself for a moment should not still be carrying a
           weapon across it. */}
-      {enabled && hud.visible && <DoomViewmodel world={camera} />}
+      {enabled && <Sidearm world={camera} />}
     </>
   );
+}
+
+// The HUD snapshot changes on every shot, hit and kill; reading it here, not
+// in DoomRig, keeps those changes from re-rendering the demons and the pools.
+function Sidearm({ world }: { world: Camera }) {
+  const { visible } = useDoomHud();
+  return visible ? <DoomViewmodel world={world} /> : null;
 }

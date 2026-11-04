@@ -319,6 +319,8 @@ export function resetWorld(w: DoomWorld): void {
   // leaving walk mode.
   for (const m of w.marks) m.active = false;
   for (const m of w.splats) m.active = false;
+  // Sparks in flight would otherwise finish their arc on the next visit.
+  for (const s of w.sparks) s.active = false;
   resetRun(w);
   w.director.phase = "idle";
   w.director.wave = 0;
@@ -488,15 +490,22 @@ function fireRound(w: DoomWorld, aim: Aim): void {
   const tx = aim.ex + aim.fx * aimT;
   const ty = aim.ey + aim.fy * aimT;
   const tz = aim.ez + aim.fz * aimT;
-  let dx = tx - aim.mx + (w.rand() - 0.5) * 2 * SIDEARM.spread * aimT;
-  let dy = ty - aim.my + (w.rand() - 0.5) * 2 * SIDEARM.spread * aimT;
-  let dz = tz - aim.mz + (w.rand() - 0.5) * 2 * SIDEARM.spread * aimT;
+  // Pressed against a wall, the muzzle (half a metre ahead of the eye) can sit
+  // past the wall's far face, and stepBullets only tests from the round's
+  // start onward. Leaving from the eye then lets the wall stop it as usual.
+  const through = segmentHitsWalls(aim.ex, aim.ey, aim.ez, aim.mx, aim.my, aim.mz, w.config.walls, w.face) >= 0;
+  const ox = through ? aim.ex : aim.mx;
+  const oy = through ? aim.ey : aim.my;
+  const oz = through ? aim.ez : aim.mz;
+  let dx = tx - ox + (w.rand() - 0.5) * 2 * SIDEARM.spread * aimT;
+  let dy = ty - oy + (w.rand() - 0.5) * 2 * SIDEARM.spread * aimT;
+  let dz = tz - oz + (w.rand() - 0.5) * 2 * SIDEARM.spread * aimT;
   const len = Math.hypot(dx, dy, dz) || 1;
   dx /= len; dy /= len; dz /= len;
   for (const b of w.bullets) {
     if (b.active) continue;
     b.active = true;
-    b.x = aim.mx; b.y = aim.my; b.z = aim.mz;
+    b.x = ox; b.y = oy; b.z = oz;
     b.vx = dx * SIDEARM.bulletSpeed;
     b.vy = dy * SIDEARM.bulletSpeed;
     b.vz = dz * SIDEARM.bulletSpeed;

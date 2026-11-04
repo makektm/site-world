@@ -3,6 +3,7 @@
 // the terminal. Pair it with <ConsoleRig> (the screen) and a PointProximity
 // (walk-up detection) inside a room's Scene, and give the same footprint to the
 // room's Colliders so a walker cannot pass through it.
+import { useEffect, useRef } from "react";
 import { Edges } from "@react-three/drei";
 import { DoubleSide } from "three";
 import { PAPER } from "../core/engine";
@@ -18,6 +19,15 @@ export function Plinth({
   /** Orbit-mode click. Leave undefined to make it inert (walk mode). */
   onActivate?: () => void;
 }) {
+  // A pointer cursor set on hover must not outlive the hover: unmounting, or
+  // going inert (walk mode passes no onActivate), sends no pointerout.
+  const hovered = useRef(false);
+  const active = onActivate !== undefined;
+  useEffect(() => () => {
+    if (!hovered.current) return;
+    hovered.current = false;
+    document.body.style.cursor = "default";
+  }, [active]);
   return (
     <group position={[at[0], 0, at[1]]}>
       <mesh
@@ -27,9 +37,12 @@ export function Plinth({
           onActivate?.();
         }}
         onPointerOver={() => {
-          if (onActivate) document.body.style.cursor = "pointer";
+          if (!onActivate) return;
+          hovered.current = true;
+          document.body.style.cursor = "pointer";
         }}
         onPointerOut={() => {
+          hovered.current = false;
           document.body.style.cursor = "default";
         }}
       >

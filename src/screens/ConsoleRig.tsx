@@ -97,13 +97,32 @@ export function OrbitNudge() {
   return null;
 }
 
-/** Orbit mode's camera move: onto a console when one powers on, and home
- * again when it powers off. Under reduced motion it cuts instead. */
-export function FlyRig({ goal, reduce }: { goal: { pos: Vector3; target: Vector3 } | null; reduce: boolean }) {
+/** Where FlyRig returns the camera to when its goal clears. */
+export interface FlyHome {
+  pos: readonly [number, number, number];
+  target: readonly [number, number, number];
+}
+
+const DEFAULT_HOME: FlyHome = { pos: HOME_POS, target: HOME_TARGET };
+
+/** Orbit mode's camera move: onto a console when one powers on, and `home`
+ * again when it powers off (the engine's HOME_POS/HOME_TARGET if not given).
+ * Under reduced motion it cuts instead. */
+export function FlyRig({
+  goal, reduce, home = DEFAULT_HOME,
+}: {
+  goal: { pos: Vector3; target: Vector3 } | null;
+  reduce: boolean;
+  home?: FlyHome;
+}) {
   const controls = useThree((s) => s.controls) as unknown as OrbitLike | null;
   const camera = useThree((s) => s.camera);
   const flight = useRef<{ fromPos: Vector3; fromTarget: Vector3; toPos: Vector3; toTarget: Vector3; t0: number } | null>(null);
   const first = useRef(true);
+  // Read when a goal clears, not a dependency: a host passing an inline
+  // literal must not restart a flight on every render.
+  const homeRef = useRef(home);
+  homeRef.current = home;
 
   useEffect(() => {
     if (!controls) return;
@@ -111,8 +130,8 @@ export function FlyRig({ goal, reduce }: { goal: { pos: Vector3; target: Vector3
       first.current = false;
       if (!goal) return; // mounted at home: nothing to fly
     }
-    const toPos = goal ? goal.pos.clone() : new Vector3(...HOME_POS);
-    const toTarget = goal ? goal.target.clone() : new Vector3(...HOME_TARGET);
+    const toPos = goal ? goal.pos.clone() : new Vector3(...homeRef.current.pos);
+    const toTarget = goal ? goal.target.clone() : new Vector3(...homeRef.current.target);
     if (reduce) {
       camera.position.copy(toPos);
       controls.target.copy(toTarget);

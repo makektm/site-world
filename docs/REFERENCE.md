@@ -234,7 +234,8 @@ Everything below is exported from `site-world`. One line each; read the source f
 | --- | --- | --- |
 | `Anchor` | type |  |
 | `OrbitNudge` | function | Keyboard orbit: j left, ; right, k up, l down. |
-| `FlyRig` | function | Orbit mode's camera move: onto a console when one powers on, and home again when it powers off. |
+| `FlyHome` | interface | Where FlyRig returns the camera to when its goal clears. |
+| `FlyRig` | function | Orbit mode's camera move: onto a console when one powers on, and `home` again when it powers off (the engine's HOME_POS/HOME_TARGET if not given). |
 | `ConsoleRig` | function | The powered console: a mast, a phosphor bezel, a halo and a floor pool, with the DOM screen warped onto the bezel every frame. |
 
 ### `screens/FullscreenPortal`

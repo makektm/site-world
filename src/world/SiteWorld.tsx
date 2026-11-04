@@ -156,6 +156,13 @@ export function SiteWorld({
     return { pos, target: center };
   }, [mode, terminals.active, consoleId]);
 
+  // Closing a console flies back to the host's own home, not the engine's.
+  const flyHome = useMemo(
+    () => ({ pos: camera.home, target: camera.target }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the numbers, not the tuples' identity
+    [camera.home.join(), camera.target.join()],
+  );
+
   return (
     <>
       <div className="sw-canvas-wrap">
@@ -189,8 +196,8 @@ export function SiteWorld({
             />
           )}
           {mode === "orbit" && <OrbitNudge />}
-          {mode === "orbit" && <FlyRig goal={hostGoal} reduce={reduce} />}
-          {mode === "orbit" && <FlyRig goal={terminalGoal} reduce={reduce} />}
+          {mode === "orbit" && <FlyRig goal={hostGoal} reduce={reduce} home={flyHome} />}
+          {mode === "orbit" && <FlyRig goal={terminalGoal} reduce={reduce} home={flyHome} />}
           <WalkRig
             enabled={mode === "walk"}
             cylinders={cylinders}

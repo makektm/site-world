@@ -93,6 +93,15 @@ export function WallScreen({
   const { warp, hide } = useScreenWarp(screen);
   const { canvas, texture } = useCanvasTexture(CONSOLE_PX_W, CONSOLE_PX_H);
   const [x, z] = hungOnWall(wall, rotationY, PANEL_STANDOFF);
+  // A pointer cursor set on hover must not outlive the hover: unmounting, or
+  // going inert (walk mode passes no onActivate), sends no pointerout.
+  const hovered = useRef(false);
+  const active = onActivate !== undefined;
+  useEffect(() => () => {
+    if (!hovered.current) return;
+    hovered.current = false;
+    document.body.style.cursor = "default";
+  }, [active]);
 
   useEffect(() => {
     const ctx = canvas.getContext("2d");
@@ -153,9 +162,12 @@ export function WallScreen({
             : undefined
         }
         onPointerOver={() => {
-          if (onActivate) document.body.style.cursor = "pointer";
+          if (!onActivate) return;
+          hovered.current = true;
+          document.body.style.cursor = "pointer";
         }}
         onPointerOut={() => {
+          hovered.current = false;
           document.body.style.cursor = "default";
         }}
       >

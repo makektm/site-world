@@ -24,6 +24,8 @@
   },
   "files": [
     "src",
+    "!src/**/*.test.ts",
+    "!src/doom/testNav.ts",
     "docs",
     "README.md",
     "LICENSE",

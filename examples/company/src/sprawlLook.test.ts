@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CALLS, SERVICES } from "./factory/catalog";
 import { sprawlReport } from "./factory/sprawl";
-import { MAX_RINGS, ageRings, pylonLooks } from "./sprawlLook";
+import { MAX_RINGS, ageRings, looksAt, pylonLooks } from "./sprawlLook";
 
 describe("pylonLooks", () => {
   const looks = pylonLooks(SERVICES, sprawlReport(SERVICES, CALLS));
@@ -32,5 +32,13 @@ describe("ageRings", () => {
     expect(ageRings(119)).toBe(1);
     expect(ageRings(120)).toBe(2);
     expect(ageRings(10_000)).toBe(MAX_RINGS);
+  });
+});
+
+describe("looks at a past moment", () => {
+  it("makes every service younger by the days gone back", () => {
+    const s = SERVICES.find((x) => x.createdAt > 300)!;
+    const report = sprawlReport(SERVICES, CALLS);
+    expect(looksAt(SERVICES, report, 0).get(s.name)!.rings).toBeGreaterThan(looksAt(SERVICES, report, 200).get(s.name)!.rings);
   });
 });

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { DEPLOY_EVERY, initialPipeline, pipelineAt, reviewPile, stepPipeline } from "./pipeline";
+import {
+  DEPLOY_EVERY, approveItem, initialPipeline, lastRollbackable, pipelineAt, reviewPile, rollbackLast, stepPipeline, topOfReview,
+} from "./pipeline";
 
 function run(ticks: number) {
   let s = initialPipeline();
@@ -49,5 +51,39 @@ describe("pipeline", () => {
     const { s } = run(250);
     expect(pipelineAt(250)).toEqual(s);
     expect(pipelineAt(120)).toEqual(run(120).s);
+  });
+});
+
+describe("on-call macros", () => {
+  it("approves the review item that has waited longest, into the next train", () => {
+    const s = initialPipeline();
+    const top = topOfReview(s)!;
+    expect(reviewPile(s).every((i) => i.stageAge <= top.stageAge)).toBe(true);
+    const next = approveItem(s, top.id);
+    expect(next.items.find((i) => i.id === top.id)!.stage).toBe("deploy");
+    expect(reviewPile(next)).toHaveLength(reviewPile(s).length - 1);
+    // Only review items can be approved.
+    const ticket = s.items.find((i) => i.stage === "ticket")!;
+    expect(approveItem(s, ticket.id)).toBe(s);
+  });
+
+  it("rolls back the newest deploy once, to the version before it", () => {
+    let s = initialPipeline();
+    while (s.deploys.length < 2) s = stepPipeline(s);
+    const last = s.deploys[s.deploys.length - 1]!;
+    const rolled = rollbackLast(s, "@priya");
+    const event = rolled.deploys[rolled.deploys.length - 1]!;
+    expect(event.rollbackOf).toBe(`${last.id}@${last.tick}`);
+    expect(event.service).toBe(last.service);
+    expect(rolled.versions[last.service]).toBe(event.version);
+    expect(event.version).not.toBe(last.version);
+    // The next rollback undoes an older deploy, never the same one twice.
+    const again = lastRollbackable(rolled);
+    expect(again && `${again.id}@${again.tick}`).not.toBe(event.rollbackOf);
+  });
+
+  it("does nothing when nothing has shipped", () => {
+    const s = initialPipeline();
+    expect(rollbackLast(s, "@priya")).toBe(s);
   });
 });

@@ -54,6 +54,8 @@ export interface AgentState {
   cost: number;
   startedMinAgo: number;
   tasksDone: number;
+  /** Stopped by a person from the on-call terminal; it stays where it was. */
+  paused?: boolean;
 }
 
 export interface HumanDef {

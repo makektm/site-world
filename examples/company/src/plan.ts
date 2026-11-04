@@ -52,6 +52,10 @@ export const BUILDING = RAW.buildingBounds;
 export const HALL = RAW.wings.find((w) => w.id === FACTORY_WING)!;
 export const DOCK = RAW.wings.find((w) => w.id === DOCK_WING)!;
 
+/** The loading dock's deck, toward the wing's far side: the wing's name is painted on the near side, where walkers arrive. */
+export const DOCK_AT: readonly [number, number] = [(DOCK.rect.minX + DOCK.rect.maxX) / 2, DOCK.rect.maxZ - 2.6];
+export const DOCK_BAY_W = 1.7;
+
 const T = 0.2;
 /** The hall's doorway: wide enough for crates on a pallet, on its south wall facing the building. */
 const HALL_GAP = 2.4;

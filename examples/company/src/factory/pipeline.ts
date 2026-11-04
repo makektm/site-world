@@ -41,6 +41,8 @@ export interface DeployEvent {
   version: string;
   id: string;
   author: string;
+  /** Set on a rollback: the deploy it undid. */
+  rollbackOf?: string;
 }
 
 export interface PipelineState {
@@ -200,6 +202,58 @@ export function stepPipeline(prev: PipelineState): PipelineState {
   }
 
   return { tick, items, deploys: deploys.slice(-KEEP_DEPLOYS), versions, nextId, shipped, rejected };
+}
+
+// What an on-call human can do to the line from a restricted terminal. Both
+// are pure, like a tick, so the live store can apply them between ticks.
+
+/** The review item a person would approve next: the one waiting longest. */
+export function topOfReview(state: PipelineState): WorkItem | null {
+  let top: WorkItem | null = null;
+  for (const i of state.items) {
+    if (i.stage === "review" && (!top || i.stageAge > top.stageAge)) top = i;
+  }
+  return top;
+}
+
+/** Approve one review item now: it joins the next deploy train. */
+export function approveItem(state: PipelineState, id: string): PipelineState {
+  if (!state.items.some((i) => i.id === id && i.stage === "review")) return state;
+  return { ...state, items: state.items.map((i) => (i.id === id ? into(i, "deploy", "waiting") : i)) };
+}
+
+/** The newest deploy that is not a rollback and has not been rolled back. */
+export function lastRollbackable(state: PipelineState): DeployEvent | null {
+  const undone = new Set(state.deploys.flatMap((d) => (d.rollbackOf ? [d.rollbackOf] : [])));
+  for (let k = state.deploys.length - 1; k >= 0; k -= 1) {
+    const d = state.deploys[k]!;
+    if (!d.rollbackOf && !undone.has(`${d.id}@${d.tick}`)) return d;
+  }
+  return null;
+}
+
+function unbump(version: string): string {
+  const [maj, min, patch] = version.split(".").map(Number);
+  return `${maj}.${min}.${Math.max(0, (patch ?? 0) - 1)}`;
+}
+
+/**
+ * Roll the newest deploy back: its service returns to the version it had
+ * before, recorded as a deploy of its own (so it flies to the pylon like any
+ * other) that names what it undid. A no-op when there is nothing to undo.
+ */
+export function rollbackLast(state: PipelineState, by: string): PipelineState {
+  const d = lastRollbackable(state);
+  if (!d) return state;
+  // The version before d: the previous deploy of that service if we still
+  // hold it, else one patch down.
+  const before = [...state.deploys].reverse().find((x) => x.service === d.service && x.tick < d.tick)?.version ?? unbump(d.version);
+  const event: DeployEvent = { tick: state.tick, service: d.service, version: before, id: `rollback of ${d.id}`, author: by, rollbackOf: `${d.id}@${d.tick}` };
+  return {
+    ...state,
+    versions: { ...state.versions, [d.service]: before },
+    deploys: [...state.deploys, event].slice(-KEEP_DEPLOYS),
+  };
 }
 
 // Checkpoints so replaying tick 5000 does not re-simulate from 0 every frame.

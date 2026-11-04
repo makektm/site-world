@@ -4,12 +4,17 @@
 //
 // Agents carry their launcher's colour on their tag edge, so "whose agents
 // are these" reads at a glance; a key floats over any session holding a secret.
+//
+// Every figure is a Selectable. The figures move, and a Selectable's box is
+// measured from what it wraps — an agent's beam to its pylon would stretch
+// the brackets across the room — so each one carries an invisible hit box
+// that rides the body instead, and that box is what gets picked.
 import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Group, Object3D } from "three";
 import {
-  AGENT_WALK_SPEED, AgentFigure, KeyBadge, PresenceMarker, pathLength, useCrowdLayout,
-  type AgentBadge, type PathPoint, type SelectionRef,
+  AGENT_WALK_SPEED, AgentFigure, KeyBadge, PresenceMarker, Selectable, pathLength, useCrowdLayout,
+  type AgentBadge, type PathPoint, type Point3,
 } from "site-world";
 import type { AgentState, HumanState, Room } from "./factory/agents";
 import { TICK_SECONDS } from "./factory/agents";
@@ -17,6 +22,7 @@ import { grantsFor } from "./factory/infra";
 import { PLAN } from "./plan";
 import { roomSpot, routeBetween, workSpot } from "./routes";
 import { useLod } from "./useLod";
+import { SELECTION, registerBody } from "./worldState";
 
 /** Each person's colour: their marker, and the tag edge of every agent they launched. */
 export const PERSON_COLOR: Record<string, string> = {
@@ -37,6 +43,7 @@ export function badgeFor(blockedOn: string | null): AgentBadge | null {
 }
 
 function sublabelOf(a: AgentState): string {
+  if (a.paused) return "paused from on-call";
   switch (a.state) {
     case "working":
       return `on ${a.service}`;
@@ -61,13 +68,43 @@ function Follow({ target, children }: { target: RefObject<Object3D | null>; chil
   return <group ref={group}>{children}</group>;
 }
 
-function Agent({ agent, spot, lift, showKeys, selected, onSelect, reduce }: {
+/** The pickable part of a moving figure: a box nobody sees, riding its body. */
+function Pick({ target, kind, id, size, mode, reduce, color }: {
+  target: RefObject<Object3D | null>;
+  kind: string;
+  id: string;
+  size: Point3;
+  mode: "orbit" | "walk";
+  reduce: boolean;
+  color?: string;
+}) {
+  const center: Point3 = [0, size[1] / 2, 0];
+  useEffect(() => {
+    const body = target.current;
+    return body ? registerBody(`${kind}:${id}`, body) : undefined;
+  }, [target, kind, id]);
+  return (
+    <Follow target={target}>
+      <Selectable store={SELECTION} kind={kind} id={id} mode={mode} reduce={reduce} color={color} bounds={{ center, size }} padding={0.05}>
+        <mesh position={center}>
+          <boxGeometry args={[size[0], size[1], size[2]]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
+        </mesh>
+      </Selectable>
+    </Follow>
+  );
+}
+
+const AGENT_BOX: Point3 = [0.9, 1.5, 0.9];
+const PERSON_BOX: Point3 = [0.8, 1.9, 0.8];
+
+function Agent({ agent, spot, lift, showKeys, selected, mode, reduce }: {
   agent: AgentState;
   spot: PathPoint;
   lift: number;
   showKeys: boolean;
   selected: boolean;
-  onSelect?: (ref: SelectionRef) => void;
+  mode: "orbit" | "walk";
   reduce: boolean;
 }) {
   const body = useRef<Group>(null);
@@ -98,12 +135,12 @@ function Agent({ agent, spot, lift, showKeys, selected, onSelect, reduce }: {
         badge={badgeFor(agent.blockedOn)}
         trail={!reduce && lod !== "campus"}
         selected={selected}
-        onSelect={onSelect ? () => onSelect({ kind: "agent", id: agent.id }) : undefined}
         hideLabel={hideLabel}
         labelLift={lift}
         bodyRef={body}
         reduce={reduce}
       />
+      <Pick target={body} kind="agent" id={agent.id} size={AGENT_BOX} mode={mode} reduce={reduce} color={PERSON_COLOR[agent.launchedBy]} />
       {keys.length > 0 && (
         <Follow target={body}>
           {/* At the drone's side, below its tag: the key's own plate only when selected, or the two print over each other. */}
@@ -151,13 +188,14 @@ function useWaypoints(points: readonly PathPoint[], speed: number, reduce: boole
   return points[Math.min(i, points.length - 1)] ?? points[points.length - 1]!;
 }
 
-function Person({ human, spot, selected, onSelect, reduce }: {
+function Person({ human, spot, selected, mode, reduce }: {
   human: HumanState;
   spot: PathPoint;
   selected: boolean;
-  onSelect?: (ref: SelectionRef) => void;
+  mode: "orbit" | "walk";
   reduce: boolean;
 }) {
+  const body = useRef<Group>(null);
   const room = roomOf(human.room);
   // Where they last stood, updated after commit so a render that runs twice
   // reads the same starting point both times.
@@ -171,17 +209,21 @@ function Person({ human, spot, selected, onSelect, reduce }: {
   }, [room, spot]);
   const at = useWaypoints(route, HUMAN_SPEED, reduce);
   const lod = useLod(PLAN.roomById[room]!.rect);
+  const color = PERSON_COLOR[human.handle] ?? "#ffffff";
   return (
-    <PresenceMarker
-      name={human.name}
-      sub={human.room === "oncall" ? `${human.handle} · on call` : human.handle}
-      color={PERSON_COLOR[human.handle] ?? "#ffffff"}
-      position={at}
-      selected={selected}
-      onSelect={onSelect ? () => onSelect({ kind: "person", id: human.id }) : undefined}
-      hideLabel={lod === "campus"}
-      reduce={reduce}
-    />
+    <>
+      <PresenceMarker
+        name={human.name}
+        sub={human.room === "oncall" ? `${human.handle} · on call` : human.handle}
+        color={color}
+        position={at}
+        selected={selected}
+        hideLabel={lod === "campus"}
+        bodyRef={body}
+        reduce={reduce}
+      />
+      <Pick target={body} kind="person" id={human.id} size={PERSON_BOX} mode={mode} reduce={reduce} color={color} />
+    </>
   );
 }
 
@@ -190,13 +232,13 @@ export interface AgentsProps {
   humans: readonly HumanState[];
   /** Keys over agents that hold secrets (the secrets layer). */
   showKeys: boolean;
-  selected?: SelectionRef | null;
-  /** Orbit mode only: clicking a figure selects it. */
-  onSelect?: (ref: SelectionRef) => void;
+  /** What is selected, to ring it on the floor (the brackets are the Selectable's). */
+  selected?: { kind: string; id: string } | null;
+  mode: "orbit" | "walk";
   reduce: boolean;
 }
 
-export function Agents({ agents, humans, showKeys, selected, onSelect, reduce }: AgentsProps) {
+export function Agents({ agents, humans, showKeys, selected, mode, reduce }: AgentsProps) {
   // A replayed day can name a service the plan does not have; skip, do not crash.
   const present = agents.filter((a) => PLAN.slotByName[a.service]);
   const spots = useCrowdLayout(
@@ -224,12 +266,12 @@ export function Agents({ agents, humans, showKeys, selected, onSelect, reduce }:
           lift={lifts.get(a.id) ?? 0}
           showKeys={showKeys}
           selected={isSel("agent", a.id)}
-          onSelect={onSelect}
+          mode={mode}
           reduce={reduce}
         />
       ))}
       {humans.map((h) => (
-        <Person key={h.id} human={h} spot={people.get(h.id)!} selected={isSel("person", h.id)} onSelect={onSelect} reduce={reduce} />
+        <Person key={h.id} human={h} spot={people.get(h.id)!} selected={isSel("person", h.id)} mode={mode} reduce={reduce} />
       ))}
     </>
   );

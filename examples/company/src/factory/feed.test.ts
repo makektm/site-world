@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { blockedBy, factoryAt, getFactory, spend } from "./feed";
+import {
+  agentsWithPauses, approveTopReview, blockedBy, factoryAt, getFactory, pauseAgent, resumeAgent, rollbackLastDeploy, spend,
+} from "./feed";
 import { HISTORY_DAYS } from "./history";
 
 describe("factory feed", () => {
@@ -29,5 +31,34 @@ describe("factory feed", () => {
       ] as never,
     });
     expect(out).toEqual({ "@maria": ["a", "b"], "CI runner capacity": ["c"] });
+  });
+});
+
+describe("on-call macros", () => {
+  it("holds a paused agent where it stopped, idle, until it is resumed", () => {
+    const paused = new Map([["agent-7f3", 3]]);
+    const later = agentsWithPauses(40, paused).find((a) => a.id === "agent-7f3")!;
+    expect(later.paused).toBe(true);
+    expect(later.state).toBe("idle");
+    expect(later.to).toBeNull();
+    expect(later.tokens).toBe(agentsWithPauses(3, new Map()).find((a) => a.id === "agent-7f3")!.tokens);
+    expect(agentsWithPauses(40, paused).filter((a) => a.paused)).toHaveLength(1);
+  });
+
+  it("logs every macro on the live store, and refuses ones with nothing to do", () => {
+    const before = getFactory().audit.length;
+    expect(pauseAgent("agent-2c8", "@priya")).toBe(true);
+    expect(pauseAgent("agent-2c8", "@priya")).toBe(false);
+    expect(getFactory().agents.find((a) => a.id === "agent-2c8")!.paused).toBe(true);
+    expect(resumeAgent("agent-2c8", "@priya")).toBe(true);
+    expect(getFactory().agents.find((a) => a.id === "agent-2c8")!.paused).toBeUndefined();
+    const pile = getFactory().reviewPile.length;
+    expect(approveTopReview("@priya")).toBe(true);
+    expect(getFactory().reviewPile).toHaveLength(pile - 1);
+    // Nothing has shipped on a store that has not ticked.
+    expect(rollbackLastDeploy("@priya")).toBe(false);
+    const log = getFactory().audit.slice(before);
+    expect(log.map((e) => e.action)).toEqual(["pause", "resume", "approve"]);
+    expect(log.every((e) => e.who === "@priya")).toBe(true);
   });
 });

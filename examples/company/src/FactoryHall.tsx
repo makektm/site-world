@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { AdditiveBlending, type Group, type Mesh, type MeshBasicMaterial, type Sprite, type SpriteMaterial } from "three";
 import {
-  INK, InfraLabel, NameTag, OK, PAPER_DIM, WARN, WorkLine, getGlowTexture,
+  INK, InfraLabel, NameTag, OK, PAPER_DIM, WARN, WorkLine, getGlowTexture, polylineLength, sampleLine,
   type FloorPoint, type SelectionRef, type WallSegment,
 } from "site-world";
 import type { DeployEvent, PipelineState } from "./factory/pipeline";
@@ -33,6 +33,14 @@ const REJECT_AT: FloorPoint = [0, FAR_Z + 1.9];
 // run upstream of it for its pile, and only CI sits on the cross piece.
 const AT: Record<string, number> = { ticket: 0.05, agent: 0.15, pr: 0.24, ci: 0.5, review: 0.86, deploy: 0.97 };
 const LINE_STATIONS = STATIONS.map((s) => ({ ...s, at: AT[s.id] }));
+
+/** Where each station's gate stands on the floor, by stage id: for a camera to frame one. */
+export const STATION_AT: Readonly<Record<string, readonly [number, number]>> = Object.fromEntries(
+  LINE_STATIONS.map((s) => {
+    const p = sampleLine(BELT, (s.at ?? 0) * polylineLength(BELT));
+    return [s.id, [p.x, p.z] as const];
+  }),
+);
 
 /** What walkers bump into in the hall: each run of belt with its gates, and the reject bin. */
 export const HALL_SOLIDS: WallSegment[] = [
@@ -135,7 +143,7 @@ function DeployFlight({ deploy, to, top, reduce, onDone }: {
         <spriteMaterial ref={burstMat} map={getGlowTexture()} color={OK} transparent depthWrite={false} blending={AdditiveBlending} />
       </sprite>
       <group ref={tag} visible={false}>
-        <NameTag text={`v${deploy.version}`} sub={`${deploy.id} shipped`} accent={OK} position={[ex, ey + 0.5, ez]} height={0.26} />
+        <NameTag text={`v${deploy.version}`} sub={deploy.rollbackOf ? `${deploy.id}` : `${deploy.id} shipped`} accent={deploy.rollbackOf ? WARN : OK} position={[ex, ey + 0.5, ez]} height={0.26} />
       </group>
     </>
   );
@@ -185,14 +193,21 @@ function fmtAge(ticks: number): string {
 
 export interface FactoryHallProps {
   pipeline: PipelineState;
+  /** The pipeline layer: crates on the line and the scoreboard's numbers. */
+  showItems: boolean;
+  /** Replaying a past day: the line was not recorded then, so it stands empty under this caption. */
+  replayCaption?: string;
   selectedId?: string;
   /** Orbit mode only: crates are clickable when this is set. */
   onSelect?: (ref: SelectionRef) => void;
   reduce: boolean;
 }
 
-export function FactoryHall({ pipeline, selectedId, onSelect, reduce }: FactoryHallProps) {
-  const items = useMemo(() => workLineItems(pipeline), [pipeline]);
+const NO_ITEMS: readonly [] = [];
+
+export function FactoryHall({ pipeline, showItems, replayCaption, selectedId, onSelect, reduce }: FactoryHallProps) {
+  const live = useMemo(() => workLineItems(pipeline), [pipeline]);
+  const items = showItems && !replayCaption ? live : NO_ITEMS;
   const review = pipeline.items.filter((i) => i.stage === "review");
   const oldest = review.reduce((n, i) => Math.max(n, i.stageAge), 0);
   const { minX, maxX, minZ } = HALL.rect;
@@ -220,9 +235,9 @@ export function FactoryHall({ pipeline, selectedId, onSelect, reduce }: FactoryH
         plate
         width={7.2}
         height={1.3}
-        text={`SHIPPED ${pipeline.shipped} · REWORKED ${pipeline.rejected}`}
-        sub={`${review.length} in review · oldest ${fmtAge(oldest)}`}
-        subColor={review.length >= 16 ? WARN : PAPER_DIM}
+        text={replayCaption ? "REPLAY" : `SHIPPED ${pipeline.shipped} · REWORKED ${pipeline.rejected}`}
+        sub={replayCaption ?? `${review.length} in review · oldest ${fmtAge(oldest)}`}
+        subColor={!replayCaption && review.length >= 16 ? WARN : PAPER_DIM}
       />
       {/* A dark apron under each run so the crates read against the grid. */}
       {HALL_SOLIDS.slice(0, BELT.length - 1).map((b, i) => (

@@ -51,3 +51,11 @@ export function pylonLooks(services: readonly FactoryService[], report: SprawlRe
     ]),
   );
 }
+
+/**
+ * Looks as they were `daysAgo` days before now: every service younger by that
+ * much (fewer rings), and the findings of that moment's catalogue.
+ */
+export function looksAt(services: readonly FactoryService[], report: SprawlReport, daysAgo: number): Map<string, PylonLook> {
+  return pylonLooks(services.map((s) => ({ ...s, createdAt: s.createdAt - daysAgo })), report);
+}

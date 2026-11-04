@@ -3,8 +3,10 @@
 //
 // metricsOf is a pure function of (service, tick), so the history is
 // recomputed from the tick instead of being accumulated — a page that
-// subscribes late still gets a full sparkline.
+// subscribes late still gets a full sparkline. The same is true of a replayed
+// moment: while the timeline is scrubbed back, the feed is that moment's.
 import { useFactory } from "./factory/feed";
+import { useView } from "./worldState";
 import { SERVICES } from "./factory/catalog";
 import { metricsOf, type Health, type ServiceMetrics } from "./factory/metrics";
 
@@ -32,10 +34,12 @@ function feedAt(tick: number): Feed {
 
 // Every room reads the feed; one shared snapshot per tick keeps the work (and
 // the object identity rooms memo on) the same for all of them.
-let last: { tick: number; feed: Feed } | null = null;
+let last: { key: string; feed: Feed } | null = null;
 
 export function useFeed(): Feed {
-  const { tick } = useFactory();
-  if (last?.tick !== tick) last = { tick, feed: feedAt(tick) };
+  const { tick: live } = useFactory();
+  const { replay } = useView();
+  const key = replay ? `r${replay.tick}` : `l${live}`;
+  if (last?.key !== key) last = { key, feed: feedAt(replay ? replay.tick : live) };
   return last.feed;
 }

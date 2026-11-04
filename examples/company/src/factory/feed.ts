@@ -8,13 +8,16 @@
 // Everything except the pipeline is a pure function of the tick; the pipeline
 // is stepped, and pipelineAt reproduces the same steps for replay.
 import { useMemo, useSyncExternalStore } from "react";
-import { agentsAt, humansAt, TICK_SECONDS, type AgentState, type HumanState, type Room } from "./agents";
+import { AGENTS, agentAt, agentsAt, humansAt, TICK_SECONDS, type AgentState, type HumanState, type Room } from "./agents";
 import { CALLS, CATALOG, SERVICES, serviceByName, type Catalog, type FactoryDomain, type FactoryService } from "./catalog";
 import { HISTORY_DAYS, stateAt, type HistoryState } from "./history";
 import { infraAt, type InfraState } from "./infra";
 import { metricsAt, type ServiceMetrics } from "./metrics";
 import { NOTES, type StickyNote } from "./notes";
-import { byStage, initialPipeline, reviewPile, stepPipeline, type DeployEvent, type PipelineState, type Stage, type WorkItem } from "./pipeline";
+import {
+  approveItem, byStage, initialPipeline, lastRollbackable, reviewPile, rollbackLast, stepPipeline, topOfReview,
+  type DeployEvent, type PipelineState, type Stage, type WorkItem,
+} from "./pipeline";
 import { sprawlReport, type SprawlReport } from "./sprawl";
 
 export interface FactoryState {
@@ -33,6 +36,16 @@ export interface FactoryState {
   infra: InfraState;
   sprawl: SprawlReport;
   notes: readonly StickyNote[];
+  /** What people did from the on-call terminal, newest last. */
+  audit: readonly AuditEntry[];
+}
+
+/** One macro run from the restricted terminal: who, what, on what, when. */
+export interface AuditEntry {
+  tick: number;
+  who: string;
+  action: "pause" | "resume" | "approve" | "rollback";
+  target: string;
 }
 
 export interface FactoryReplay {
@@ -54,6 +67,24 @@ export const FACTORY_TICK_MS = 1500;
 // just make new arrays for the same answer.
 const SPRAWL = sprawlReport(SERVICES, CALLS);
 
+/**
+ * The agents at a tick, with the paused ones held where they were when a
+ * person stopped them: idle, going nowhere, their tokens frozen.
+ */
+export function agentsWithPauses(tick: number, pausedAt: ReadonlyMap<string, number>): AgentState[] {
+  return AGENTS.map((def) => {
+    const at = pausedAt.get(def.id);
+    if (at === undefined) return agentAt(def, tick);
+    return { ...agentAt(def, at), state: "idle", to: null, progress: 0, blockedOn: null, paused: true };
+  });
+}
+
+// What the on-call macros changed. Module state like the pipeline: the live
+// store owns it; replays never see it (an intervention is not history yet).
+const pausedAt = new Map<string, number>();
+let audit: readonly AuditEntry[] = [];
+const AUDIT_KEEP = 20;
+
 function snapshot(tick: number, pipeline: PipelineState): FactoryState {
   return {
     tick,
@@ -61,7 +92,7 @@ function snapshot(tick: number, pipeline: PipelineState): FactoryState {
     services: SERVICES,
     calls: CALLS,
     metrics: metricsAt(tick),
-    agents: agentsAt(tick),
+    agents: agentsWithPauses(tick, pausedAt),
     humans: humansAt(tick),
     pipeline,
     stages: byStage(pipeline),
@@ -70,6 +101,7 @@ function snapshot(tick: number, pipeline: PipelineState): FactoryState {
     infra: infraAt(tick),
     sprawl: SPRAWL,
     notes: NOTES,
+    audit,
   };
 }
 
@@ -101,16 +133,64 @@ export function getFactory(): FactoryState {
   return state;
 }
 
+// The restricted macros. Each is one narrow, logged change to the model —
+// the point is that a person acts on the factory from inside it without a
+// shell: they can stop an agent, let one PR through, undo one deploy, and
+// nothing else. Each returns false when there was nothing to do.
+
+function publish(entry: AuditEntry): void {
+  audit = [...audit, entry].slice(-AUDIT_KEEP);
+  // Deploys already flown this tick must not fly again; only a rollback's
+  // own event is new.
+  const fresh = entry.action === "rollback" ? pipeline.deploys.slice(-1) : [];
+  state = { ...snapshot(pipeline.tick, pipeline), deploysNow: fresh };
+  for (const l of listeners) l();
+}
+
+export function pauseAgent(id: string, who: string): boolean {
+  if (pausedAt.has(id) || !AGENTS.some((a) => a.id === id)) return false;
+  pausedAt.set(id, state.tick);
+  publish({ tick: state.tick, who, action: "pause", target: id });
+  return true;
+}
+
+export function resumeAgent(id: string, who: string): boolean {
+  if (!pausedAt.delete(id)) return false;
+  publish({ tick: state.tick, who, action: "resume", target: id });
+  return true;
+}
+
+export function approveTopReview(who: string): boolean {
+  const top = topOfReview(pipeline);
+  if (!top) return false;
+  pipeline = approveItem(pipeline, top.id);
+  publish({ tick: state.tick, who, action: "approve", target: top.id });
+  return true;
+}
+
+export function rollbackLastDeploy(who: string): boolean {
+  const d = lastRollbackable(pipeline);
+  if (!d) return false;
+  pipeline = rollbackLast(pipeline, who);
+  publish({ tick: state.tick, who, action: "rollback", target: `${d.service} v${d.version}` });
+  return true;
+}
+
 export function useFactory(): FactoryState {
   return useSyncExternalStore(subscribeFactory, getFactory, getFactory);
+}
+
+/** Within a replayed day, the time of day drives the per-tick animation. */
+export function replayTick(t: number): number {
+  const clamped = Math.min(HISTORY_DAYS, Math.max(0, t));
+  return Math.floor(((clamped % 1) * 86_400) / TICK_SECONDS);
 }
 
 /** The factory at timeline time t (days). Pure; the hook below memoises it. */
 export function factoryAt(t: number): FactoryReplay {
   const clamped = Math.min(HISTORY_DAYS, Math.max(0, t));
   const history = stateAt(clamped);
-  // Within a replayed day, the time of day drives the per-tick animation.
-  const tick = Math.floor(((clamped % 1) * 86_400) / TICK_SECONDS);
+  const tick = replayTick(clamped);
   const names = new Set(history.services.map((s) => s.name));
   return {
     t: clamped,

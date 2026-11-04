@@ -13,13 +13,18 @@
 //                  agent session (the same blue as an agent's sticky note)
 //   dark shaft     an orphan: nothing calls it and it serves no traffic
 //   blank plate    nobody owns it but the agent session that made it
+//   dashed outline a service that did not exist yet at the replayed moment
+//
+// Trim, dark shaft and blank plate belong to the ownership layer; with it off
+// every pylon wears the same plain trim. A pylon can be selected: click its
+// shaft (or aim at it and press E while walking) to inspect it.
 import { useEffect, useMemo, useRef } from "react";
 import { Edges, Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { damp } from "maath/easing";
 import { AdditiveBlending, type Group, type Mesh } from "three";
 import {
-  BOARD_STANDOFF, CRITICAL, INFO, INK, OK, PAPER, PAPER_DIM, WALL_FILL, WARN,
+  BOARD_STANDOFF, CRITICAL, INFO, INK, OK, PAPER, PAPER_DIM, Selectable, WALL_FILL, WARN,
   defineRoom, fitText, getGlowTexture, hungOnWall, orbitAngle, orbitPos, ringPoints, useCanvasTexture, type Lod,
 } from "site-world";
 import type { LayoutRoom, ServiceSlot } from "site-world";
@@ -27,7 +32,9 @@ import type { FactoryService } from "./factory/catalog";
 import { HEALTH_LABEL, useFeed, type Health, type ServiceState } from "./liveFeed";
 import type { BoardSpot } from "./plan";
 import type { PylonLook } from "./sprawlLook";
+import { layerOn } from "./factoryLayers";
 import { useLod } from "./useLod";
+import { SELECTION, useView } from "./worldState";
 
 type Slot = ServiceSlot<FactoryService>;
 
@@ -35,11 +42,12 @@ export const HEALTH_COLOR: Record<Health, string> = { ok: OK, warn: WARN, down: 
 
 const PYLON_R = 0.26;
 const ORBIT_R = 1.05;
+const PICK_R = 0.36;
 const SPIN = 0.5; // rad/s
 
 /** Shaft and trim by who made the service; an orphan's dust overrides both. */
-const SHAFT = { human: WALL_FILL, agent: "#13223a", orphan: "#07090d" } as const;
-const TRIM = { human: PAPER, agent: INFO, orphan: "#57544c" } as const;
+const SHAFT = { human: WALL_FILL, agent: "#13223a", orphan: "#07090d", plain: WALL_FILL } as const;
+const TRIM = { human: PAPER, agent: INFO, orphan: "#57544c", plain: PAPER_DIM } as const;
 
 const DEFAULT_LOOK: PylonLook = { origin: "human", rings: 1, orphan: false, unowned: false, pair: null };
 
@@ -50,7 +58,15 @@ export function pylonHeight(rps: number): number {
 
 /** A pylon, drawn about its own origin; the caller's group puts it on its slot,
  * turned so the name plate (local +z) faces the aisle. */
-function Pylon({ def, state, phase, look, lod }: { def: FactoryService; state: ServiceState; phase: number; look: PylonLook; lod: Lod }) {
+function Pylon({ def, state, phase, look, lod, ownership }: {
+  def: FactoryService;
+  state: ServiceState;
+  phase: number;
+  look: PylonLook;
+  lod: Lod;
+  /** The ownership layer: origin trim, orphan shaft, blank plate, owner line. */
+  ownership: boolean;
+}) {
   const shaft = useRef<Mesh>(null);
   const top = useRef<Group>(null);
   const cubes = useRef<(Group | null)[]>([]);
@@ -59,7 +75,7 @@ function Pylon({ def, state, phase, look, lod }: { def: FactoryService; state: S
   const want = pylonHeight(state.rps);
   // An orphan's beacon is out: there is no traffic for it to report on.
   const color = look.orphan ? PAPER_DIM : HEALTH_COLOR[state.health];
-  const kind = look.orphan ? "orphan" : look.origin;
+  const kind = !ownership ? "plain" : look.orphan ? "orphan" : look.origin;
   // Far away, a pylon is its shaft and beacon; replicas and plate are detail.
   const far = lod === "campus";
 
@@ -118,7 +134,7 @@ function Pylon({ def, state, phase, look, lod }: { def: FactoryService; state: S
               )}
             </group>
           ))}
-          {look.unowned ? <BlankPlate name={def.name} by={def.createdBy} /> : <NamePlate def={def} state={state} />}
+          {ownership && look.unowned ? <BlankPlate name={def.name} by={def.createdBy} /> : <NamePlate def={def} state={state} owner={ownership} />}
         </>
       )}
     </group>
@@ -126,7 +142,7 @@ function Pylon({ def, state, phase, look, lod }: { def: FactoryService; state: S
 }
 
 /** The service's name and its numbers, painted on the floor in front of it. */
-function NamePlate({ def, state }: { def: FactoryService; state: ServiceState }) {
+function NamePlate({ def, state, owner }: { def: FactoryService; state: ServiceState; owner: boolean }) {
   const W = 2.3;
   const H = 0.8;
   const { canvas, texture } = useCanvasTexture(Math.round(W * 260), Math.round(H * 260));
@@ -147,6 +163,10 @@ function NamePlate({ def, state }: { def: FactoryService; state: ServiceState })
       ctx.fillStyle = HEALTH_COLOR[state.health];
       ctx.font = "34px 'IBM Plex Mono', ui-monospace, monospace";
       ctx.fillText(line, w / 2, h * 0.6);
+      if (!owner) {
+        texture.needsUpdate = true;
+        return;
+      }
       // Who made it and who answers for it: a dot for a person's PR, a diamond for an agent session.
       ctx.fillStyle = def.origin === "agent" ? INFO : PAPER_DIM;
       ctx.font = "28px 'IBM Plex Mono', ui-monospace, monospace";
@@ -158,7 +178,7 @@ function NamePlate({ def, state }: { def: FactoryService; state: ServiceState })
     return () => {
       alive = false;
     };
-  }, [canvas, texture, def.name, def.origin, def.createdBy, def.owner, line, state.health]);
+  }, [canvas, texture, def.name, def.origin, def.createdBy, def.owner, line, state.health, owner]);
   return (
     <mesh position={[0, 0.015, ORBIT_R + 0.64]} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[W, H]} />
@@ -209,6 +229,21 @@ function BlankPlate({ name, by }: { name: string; by: string }) {
       <planeGeometry args={[W, H]} />
       <meshBasicMaterial map={texture} transparent toneMapped={false} depthWrite={false} />
     </mesh>
+  );
+}
+
+/** A service that did not exist yet at the replayed moment: where it will
+ * stand, outlined, so the room's shape does not jump while scrubbing. */
+function GhostPylon() {
+  const ring = useMemo(() => ringPoints([0, 0], PYLON_R + 0.08, 0.02, 24), []);
+  return (
+    <group>
+      <Line points={ring} color={PAPER_DIM} lineWidth={1} transparent opacity={0.5} dashed dashSize={0.08} gapSize={0.08} />
+      <mesh position={[0, 0.6, 0]}>
+        <cylinderGeometry args={[PYLON_R * 0.7, PYLON_R, 1.2, 6]} />
+        <meshBasicMaterial color={PAPER_DIM} transparent opacity={0.07} depthWrite={false} />
+      </mesh>
+    </group>
   );
 }
 
@@ -338,19 +373,47 @@ export function serviceRoom({ room, slots, board, looks }: ServiceRoomSpec) {
       // A new array only when the feed ticks, so the board repaints once a tick.
       return useMemo(() => slots.map((s) => [s.service, feed[s.name]!] as [FactoryService, ServiceState]), [feed]);
     },
-    Scene({ model }) {
+    Scene({ model, env }) {
       const lod = useLod(room.rect);
+      const { layers, replay } = useView();
+      const ownership = layerOn(layers, "ownership");
+      const lookOf = (name: string) => (replay?.looks ?? looks).get(name) ?? DEFAULT_LOOK;
+      // A replayed moment's board lists only what existed then.
+      const rows = useMemo(() => (replay ? model.filter(([def]) => replay.present.has(def.name)) : model), [model, replay]);
       return (
         <>
           {model.map(([def, state], i) => {
             const slot = slots[i]!;
+            const h = pylonHeight(state.rps);
             return (
               <group key={def.name} position={[slot.pos[0], 0, slot.pos[1]]} rotation={[0, slot.facing, 0]}>
-                <Pylon def={def} state={state} phase={phaseOf(slot)} look={looks.get(def.name) ?? DEFAULT_LOOK} lod={lod} />
+                {replay && !replay.present.has(def.name) ? (
+                  <GhostPylon />
+                ) : (
+                  <>
+                    <Pylon def={def} state={state} phase={phaseOf(slot)} look={lookOf(def.name)} lod={lod} ownership={ownership} />
+                    {/* Picked by an invisible column round the shaft and beacon: the plate and the replicas'
+                        orbit reach across the aisle, and would take clicks meant for the on-call plinth. */}
+                    <Selectable
+                      store={SELECTION}
+                      kind="service"
+                      id={def.name}
+                      mode={env.mode}
+                      reduce={env.reduce}
+                      color={HEALTH_COLOR[state.health]}
+                      bounds={{ center: [0, (h + 0.4) / 2, 0], size: [0.7, h + 0.4, 0.7] }}
+                    >
+                      <mesh position={[0, (h + 0.4) / 2, 0]}>
+                        <cylinderGeometry args={[PICK_R, PICK_R, h + 0.4, 8]} />
+                        <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
+                      </mesh>
+                    </Selectable>
+                  </>
+                )}
               </group>
             );
           })}
-          <Board title={room.label} wall={board.wall} rotationY={board.rotationY} rows={model} />
+          <Board title={room.label} wall={board.wall} rotationY={board.rotationY} rows={rows} />
         </>
       );
     },

@@ -1,8 +1,9 @@
 // The sprawl layer, drawn round the pylons rather than on them: tree rings at
 // each base for age, a coloured hazard collar on both halves of a look-alike
 // pair with a line on the floor joining them, and dust settling round the
-// orphans nothing calls. The pylons themselves always show who made them and
-// whether anyone owns them (serviceRoom.tsx); this layer is the audit.
+// orphans nothing calls. Two layers share it: age (the rings) and ownership
+// (collars, links and dust, alongside the pylons' own trim and plates in
+// serviceRoom.tsx).
 import { useEffect, useMemo, useRef } from "react";
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
@@ -117,10 +118,14 @@ function Dust({ slot, reduce }: { slot: Slot; reduce: boolean }) {
 
 export interface SprawlProps {
   looks: ReadonlyMap<string, PylonLook>;
+  /** The age layer: tree rings. */
+  showAge: boolean;
+  /** The ownership layer: look-alike collars and links, orphan dust. */
+  showFindings: boolean;
   reduce: boolean;
 }
 
-export function Sprawl({ looks, reduce }: SprawlProps) {
+export function Sprawl({ looks, showAge, showFindings, reduce }: SprawlProps) {
   const kit = useRingKit();
   const slots = PLAN.slots.filter((s) => looks.has(s.name));
   const pairs = slots.flatMap((s) => {
@@ -135,13 +140,13 @@ export function Sprawl({ looks, reduce }: SprawlProps) {
         const look = looks.get(s.name)!;
         return (
           <group key={s.name}>
-            <AgeRings slot={s} rings={look.rings} kit={kit} />
-            {look.pair && <Collar slot={s} tint={look.pair.tint} />}
-            {look.orphan && <Dust slot={s} reduce={reduce} />}
+            {showAge && <AgeRings slot={s} rings={look.rings} kit={kit} />}
+            {showFindings && look.pair && <Collar slot={s} tint={look.pair.tint} />}
+            {showFindings && look.orphan && <Dust slot={s} reduce={reduce} />}
           </group>
         );
       })}
-      {pairs.map((p) => (
+      {showFindings && pairs.map((p) => (
         <PairLink key={`${p.a.name}~${p.b.name}`} a={p.a} b={p.b} tint={p.tint} />
       ))}
     </>

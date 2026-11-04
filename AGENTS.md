@@ -31,8 +31,17 @@ src/camera/           orbit math
 src/world/            SiteWorld (the viewport) and WorldParts (GridFloor, WallBoxes, solids)
 src/doom/             the optional demon game: rules, nav, hunt AI, store, 3D bodies, HUD
 src/layout/           catalog-driven floor plans: layoutCatalog (domains+services -> walls, doors, rooms, slots), LOD, room graph
+src/kit/              parts for a software factory, all data-in props (see docs/GUIDE-kit.md):
+                        agents + people   AgentFigure, PresenceMarker, NameTag, AgentTrail; agentPath, crowdLayout
+                        the work line     WorkLine (Conveyor, Station, Crate), workLineLayout
+                        infra             Tank, QueuePipe, LoadingDock, Meter, FloorHeat, Padlock, StickyNote; infraMath
+                        interactions      Selectable + SelectionCrosshair + selection store, InspectPanel, LayerBar,
+                                          GoToPalette, goalFor, useFollow, useTour/TourCaption,
+                                          useTimeline/TimelineScrubber, blastRadius; kit.css
 examples/basic/       a toy world using only the public API — keep it compiling and small
-examples/company/     ten microservices as a building (the README screenshots) — public API only
+examples/company/     a software factory as a building (the README screenshots) — public API only
+  src/factory/        its data: catalogue (with sprawl), agents, pipeline, infra, history, metrics, the live feed
+  src/plan.ts         the building planned from the catalogue; App.tsx the interactions; FactoryScene.tsx what moves
 docs/                 ARCHITECTURE, GUIDE-*, REFERENCE (generated)
 ```
 

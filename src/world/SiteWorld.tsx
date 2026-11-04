@@ -26,7 +26,7 @@ import { DoomHud } from "../doom/DoomHud";
 import type { SwitchAt } from "../doom/DemonSwitch";
 import { FlyRig, OrbitNudge } from "../screens/ConsoleRig";
 import { UsePrompt } from "../screens/UsePrompt";
-import { WalkRig, type RoundSolid } from "../walk/WalkPhysics";
+import { WalkRig, type RoundSolid, type WalkTo } from "../walk/WalkPhysics";
 import { EYE, INK, SCREEN_Y, VIEW_DIST, type DoorSignSpec } from "../core/engine";
 import { useRoomModels, type RoomEnv, type SiteRoom } from "../core/room";
 import { useTerminals } from "../core/terminals";
@@ -67,6 +67,8 @@ export interface SiteWorldProps {
   /** An orbit fly-in the host wants (a machine console), alongside the
    * terminals' own. */
   hostGoal?: { pos: Vector3; target: Vector3 } | null;
+  /** Walk mode: put the walker at a spot (a go-to). A new `seq` replants. */
+  walkTo?: WalkTo | null;
   /** The host's own "[E]" prompt, shown after the demon switch's and before
    * the rooms'. */
   hostPrompt?: string | null;
@@ -112,7 +114,7 @@ const NONE: readonly never[] = [];
 /** The whole viewport: canvas, orbit/walk cameras, doors, rooms, terminals and their DOM screens. */
 export function SiteWorld({
   mode, reduce, camera, rooms, doors = NONE, doorSigns, solids, cylinders = NONE, checkpoint, doomSwitchAt,
-  onOpenPage, cameraRef, consoleId = null, onConsoleExit, hostGoal = null, hostPrompt = null, walkHint,
+  onOpenPage, cameraRef, consoleId = null, onConsoleExit, hostGoal = null, walkTo = null, hostPrompt = null, walkHint,
   children, overlay, background = INK,
 }: SiteWorldProps) {
   const [doorsOpen, setDoorOpen] = useDoorsOpen(doors);
@@ -205,6 +207,7 @@ export function SiteWorld({
             doorsOpen={doorsOpen}
             solids={allSolids}
             checkpoint={checkpoint}
+            walkTo={walkTo}
           />
         </Canvas>
         {mode === "walk" && (

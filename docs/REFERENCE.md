@@ -210,6 +210,7 @@ Everything below is exported from `site-world`. One line each; read the source f
 | --- | --- | --- |
 | `RoundSolid` | interface | A round solid the walker cannot enter (a machine column, say). |
 | `WalkColliders` | function | The static walk-mode proxies: `cylinders` and whatever solids the world and its rooms hand in. |
+| `WalkTo` | interface | A host's request to put the walker somewhere: stand at `at` ([x, z]) and face `lookAt`. |
 | `WalkRig` | function |  |
 
 ### `walk/walkStance`
@@ -863,6 +864,7 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `goalFor` | function | A pleasing orbit-camera goal looking at `point`. |
 | `goalShifted` | function | The same goal moved so its target sits on `point`, the camera keeping its offset — how a follow tracks a mover without swinging. |
 | `goalNeedsMove` | function | True when `point` has moved at least `minMove` metres from where `goal` looks: SiteWorld restarts a whole eased flight on every new goal, so a follower should only issue one when the mover has really gone somewhere. |
+| `standFor` | function | Where a walker should stand to face `point`: `distance` metres out on the side `from` is on (else +z), looking at it at eye height. |
 
 ### `kit/layers`
 

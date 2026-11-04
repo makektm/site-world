@@ -42,6 +42,7 @@ const sel = useSelection(SELECTION);                                            
 Everything that moves the camera hands `<SiteWorld hostGoal>` a goal; the host picks which wins.
 
 - `goalFor(point, { from, distance })` — fly to a point. `<GoToPalette>` is a fuzzy search that reports a pick.
+- `standFor(point, { from, distance })` — while walking, where to stand facing a point; hand it to `<SiteWorld walkTo={{ ...spot, seq }}>` with a new `seq` per jump.
 - `useFollow(getPoint, on)` — keep the camera on something moving (an agent's `bodyRef`).
 - `useTour(stops)` + `<TourCaption>` — a guided walk through a story, arrows and Esc.
 - `useTimeline` + `<TimelineScrubber>` — scrub or play back time; you render the moment it shows.

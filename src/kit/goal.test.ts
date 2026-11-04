@@ -2,7 +2,7 @@
 // side the camera is already on, and never dips under the floor.
 import { describe, expect, it } from "vitest";
 import { Vector3 } from "three";
-import { goalFor, goalNeedsMove, goalShifted } from "./goal";
+import { goalFor, goalNeedsMove, goalShifted, standFor } from "./goal";
 
 describe("goalFor", () => {
   it("targets the point and stands `distance` away", () => {
@@ -50,5 +50,20 @@ describe("following", () => {
     expect(goalNeedsMove(null, [0, 0, 0], 1)).toBe(true);
     expect(goalNeedsMove(g, [0.5, 0, 0], 1)).toBe(false);
     expect(goalNeedsMove(g, [1.2, 0, 0], 1)).toBe(true);
+  });
+});
+
+describe("standFor", () => {
+  it("stands on the side the walker comes from, facing the point", () => {
+    const s = standFor([0, 0, 0], { from: [10, 1.6, 0], distance: 2 });
+    expect(s.at[0]).toBeCloseTo(2);
+    expect(s.at[1]).toBeCloseTo(0);
+    expect(s.lookAt).toEqual([0, 1.5, 0]);
+  });
+  it("defaults to +z when there is no bearing", () => {
+    const s = standFor([3, 2, 4]);
+    expect(s.at[0]).toBeCloseTo(3);
+    expect(s.at[1]).toBeCloseTo(5.8);
+    expect(s.lookAt[1]).toBe(2);
   });
 });

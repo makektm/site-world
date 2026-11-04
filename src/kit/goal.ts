@@ -74,3 +74,24 @@ export function goalNeedsMove(goal: CameraGoal | null, point: Point3 | Vector3, 
   const [x, y, z] = xyz(point);
   return Math.hypot(goal.target.x - x, goal.target.y - y, goal.target.z - z) >= minMove;
 }
+
+/** Where a walker should stand to face `point`: `distance` metres out on the
+ * side `from` is on (else +z), looking at it at eye height. Pair it with a
+ * fresh `seq` for SiteWorld's `walkTo`. The spot is not checked against
+ * walls — pass a `distance` that keeps it inside the room. */
+export function standFor(
+  point: Point3 | Vector3,
+  opts: { distance?: number; from?: Point3 | Vector3 | null; eye?: number } = {},
+): { at: [number, number]; lookAt: [number, number, number] } {
+  const [px, py, pz] = xyz(point);
+  const distance = opts.distance ?? 1.8;
+  let azimuth = 0;
+  if (opts.from) {
+    const [fx, , fz] = xyz(opts.from);
+    if (Math.hypot(fx - px, fz - pz) > 1e-3) azimuth = Math.atan2(fx - px, fz - pz);
+  }
+  return {
+    at: [px + Math.sin(azimuth) * distance, pz + Math.cos(azimuth) * distance],
+    lookAt: [px, opts.eye ?? Math.max(py, 1.5), pz],
+  };
+}

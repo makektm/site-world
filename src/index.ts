@@ -62,3 +62,10 @@ export * from "./doom/doomStore";
 export * from "./doom/doomWorld";
 export * from "./doom/markArt";
 export * from "./doom/simpleWorld";
+
+// Factory floor: belts, stations, crates of work, and the line that composes them
+export * from "./kit/Conveyor";
+export * from "./kit/Crate";
+export * from "./kit/Station";
+export * from "./kit/WorkLine";
+export * from "./kit/workLineLayout";

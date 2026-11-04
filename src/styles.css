@@ -1,0 +1,47 @@
+/* site-world's own CSS. SiteWorld imports it for you, so a host need not.
+   Theme with --sw-font and --sw-ink-dim. Class names are .sw-* ; a host's own
+   chrome (fullscreen, mode buttons) is the host's. */
+.sw-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: clamp(22rem, 52vw, 36rem);
+  touch-action: none;
+  isolation: isolate;
+}
+/* The console screen's layer lies exactly over the canvas; the screen in it
+   is warped onto its bezel each frame from the top-left corner. Only the
+   screen takes the pointer — the layer lets it through to the drawing. */
+.sw-screen-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  overflow: hidden;
+  pointer-events: none;
+}
+.sw-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  pointer-events: auto;
+}
+.sw-screen:empty { display: none; }
+.sw-canvas-wrap canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+.sw-walk-hint {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.65rem;
+  margin: 0;
+  z-index: 3;
+  font-family: var(--sw-font, ui-monospace, monospace);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: var(--sw-ink-dim, #b9b3a2);
+  pointer-events: none;
+  text-align: center;
+}

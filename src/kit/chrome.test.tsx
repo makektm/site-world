@@ -78,6 +78,19 @@ describe("LayerBar", () => {
     field.remove();
     expect(screen.getAllByRole("button")[1]!.getAttribute("aria-pressed")).toBe("true");
   });
+
+  it("leaves a key alone that a focused control already handled", () => {
+    const { result } = renderHook(() => useLayers([{ id: "traffic", label: "traffic" }]));
+    render(<LayerBar layers={result.current} />);
+    const chip = document.createElement("button");
+    chip.addEventListener("keydown", (e) => e.preventDefault());
+    document.body.appendChild(chip);
+    act(() => {
+      chip.dispatchEvent(new KeyboardEvent("keydown", { key: "1", code: "Digit1", bubbles: true, cancelable: true }));
+    });
+    expect(result.current.on).toEqual({ traffic: false });
+    chip.remove();
+  });
 });
 
 describe("InspectPanel", () => {

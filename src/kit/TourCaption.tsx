@@ -17,7 +17,9 @@ export interface TourCaptionProps {
 /** The DOM caption card for `useTour`; renders nothing when no tour runs. */
 export function TourCaption({ tour, hotkeys = true, className, style }: TourCaptionProps) {
   useKeydown((event) => {
-    if (hasCommandModifier(event) || isTypingTarget(event.target) || isChromeOpen()) return;
+    // A key something on the page already handled (a focused control's own
+    // arrow-key handling) is not the tour's.
+    if (event.defaultPrevented || hasCommandModifier(event) || isTypingTarget(event.target) || isChromeOpen()) return;
     if (event.key === "ArrowRight") tour.next();
     else if (event.key === "ArrowLeft") tour.prev();
     else if (event.key === "Escape") tour.end();

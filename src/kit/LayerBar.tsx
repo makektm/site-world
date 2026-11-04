@@ -23,7 +23,7 @@ export interface LayerBarProps {
 /** DOM chips for `useLayers`' state, with keyboard shortcuts 1..9. */
 export function LayerBar({ layers, hotkeys = true, className, style }: LayerBarProps) {
   useKeydown((event) => {
-    if (event.repeat || hasCommandModifier(event)) return;
+    if (event.defaultPrevented || event.repeat || hasCommandModifier(event)) return;
     if (isTypingTarget(event.target) || isChromeOpen()) return;
     const m = /^Digit([1-9])$/.exec(event.code);
     if (!m) return;

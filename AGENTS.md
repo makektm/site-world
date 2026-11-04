@@ -9,10 +9,11 @@ This file is the map for any agent (or human) changing the repo. It is short on 
 bun install
 bun run typecheck      # tsc over src/ and scripts/
 bun run test           # vitest (jsdom). Includes the boundary test and the docs-are-current test
-bun run check          # typecheck (src, scripts, example) + test
+bun run check          # typecheck (src, scripts, both examples) + test
 bun run example        # hot-reloading demo (examples/basic)
+bun run example:company # the ten-service company demo (examples/company)
 bun run reference      # (uses node) regenerate docs/REFERENCE.md from the code (CI fails if it is stale)
-bun run screenshot     # (uses node + Playwright) regenerate media/*.png, the README images, from the example
+bun run screenshot     # (uses node + Playwright) regenerate media/*.png, the README images, from examples/company
 ```
 
 Never run a bare binary; use the scripts so config and caching apply.
@@ -30,6 +31,7 @@ src/camera/           orbit math
 src/world/            SiteWorld (the viewport) and WorldParts (GridFloor, WallBoxes, solids)
 src/doom/             the optional demon game: rules, nav, hunt AI, store, 3D bodies, HUD
 examples/basic/       a toy world using only the public API — keep it compiling and small
+examples/company/     ten microservices as a building (the README screenshots) — public API only
 docs/                 ARCHITECTURE, GUIDE-*, REFERENCE (generated)
 ```
 
@@ -52,7 +54,7 @@ docs/                 ARCHITECTURE, GUIDE-*, REFERENCE (generated)
 - Coordinates are metres, y up. A wall is `{ pos, size }` with `pos` its centre. `WALL` is the wall
   height, `DOOR_H` the door height, `EYE` the eye height (see `src/core/engine.ts`).
 - Comments say *why* (a measured bug, a constraint), not what. Keep them true when you change code.
-- Keep `examples/basic` and the guides in step with the API you change.
+- Keep `examples/basic`, `examples/company` and the guides in step with the API you change.
 
 ## Doing a change
 

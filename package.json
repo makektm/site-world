@@ -44,8 +44,9 @@
     "test": "vitest run",
     "reference": "node scripts/reference.mjs",
     "screenshot": "node scripts/screenshot.mjs",
-    "check": "bun run typecheck && bun run test && bun run --filter site-world-example-basic typecheck",
-    "example": "bun run --filter site-world-example-basic dev"
+    "check": "bun run typecheck && bun run test && bun run --filter 'site-world-example-*' typecheck",
+    "example": "bun run --filter site-world-example-basic dev",
+    "example:company": "bun run --filter site-world-example-company dev"
   },
   "peerDependencies": {
     "@react-three/drei": ">=10.7",

@@ -16,3 +16,4 @@ jobs:
       - run: bun run typecheck
       - run: bun run test
       - run: bun run --filter site-world-example-basic build
+      - run: bun run --filter site-world-example-company build

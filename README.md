@@ -5,11 +5,13 @@ Draw your data as a *place*: rooms with boards on the walls, sliding doors, term
 and press **E** at, an orbit camera for looking around and a first-person walk mode for being in it.
 It started as the live "SITE" view of an engineering dashboard and was lifted out as a library.
 
-| A cluster as a room: pylon, orbiting services, wall dashboard | A terminal, powered |
-| --- | --- |
-| ![The example world from the orbit camera: a service dashboard on the far wall, a pylon with its services orbiting it, and a terminal's plinth](media/overview.png) | ![The notes terminal powered on: a green-phosphor screen standing over its plinth](media/terminal.png) |
+![A company's ten microservices as a building: four rooms (EDGE, COMMERCE, PAYMENTS, PLATFORM), a pylon per service with its replicas orbiting it, live dashboards on the walls, and the calls between services as glowing arcs overhead](media/overview.png)
 
-<sub>Both from `examples/basic`. Regenerate with `bun run screenshot`.</sub>
+| Walk in: the PAYMENTS room mid-incident | The on-call console, powered |
+| --- | --- |
+| ![First person in the PAYMENTS room: an orange (degraded) beacon on the payments pylon and its wall dashboard showing a dead replica, 455ms p99 and 4.3% errors](media/walk.png) | ![The on-call terminal: every service with its traffic, latency and health, and runbook buttons for the two that need attention](media/terminal.png) |
+
+<sub>All from `examples/company`, a fictional company running ten microservices. Regenerate with `bun run screenshot`.</sub>
 
 ## Why
 
@@ -57,12 +59,19 @@ import { SiteWorld, GridFloor, WallBoxes } from "site-world";
 
 ```bash
 bun install
-bun run example        # a toy world: one room, a door, a terminal, a pylon, a dashboard, and demons
+bun run example:company   # ten microservices in four rooms, live (the screenshots above)
+bun run example           # the smallest world: one room, a door, a terminal, a pylon, and demons
 ```
 
-`examples/basic/` is ~400 lines and uses only the public API: a terminal room (`notesRoom`) and a
-cluster room (`clusterRoom`: a pylon, services orbiting it, a dashboard on the wall). Start by reading
-[`examples/basic/src/notesRoom.tsx`](examples/basic/src/notesRoom.tsx).
+Both use only the public API.
+
+- [`examples/company/`](examples/company/) is a fictional company's ten microservices as a building:
+  a room per domain, a pylon per service (its height is traffic, its orbiting cubes are replicas, its
+  beacon is health), a live dashboard per room, the call graph overhead, and an on-call console.
+  [`services.ts`](examples/company/src/services.ts) is the one file to replace with your own service
+  catalogue and metrics; [`serviceRoom.tsx`](examples/company/src/serviceRoom.tsx) turns a domain into a room.
+- [`examples/basic/`](examples/basic/) is the starter: start by reading
+  [`notesRoom.tsx`](examples/basic/src/notesRoom.tsx) to see what a room is.
 
 ## What you get
 

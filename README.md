@@ -58,6 +58,8 @@ The package ships **TypeScript source** (no build step), so let your bundler com
 - Vite: `optimizeDeps: { exclude: ["site-world"] }` (and, for Vitest, `test.server.deps.inline: ["site-world"]`).
 - Next.js: `transpilePackages: ["site-world"]`.
 
+The package ships its `tsconfig.json` (automatic JSX runtime) so esbuild/Vite compile its TSX correctly.
+
 ## Learn the codebase
 
 Start with [`AGENTS.md`](AGENTS.md) (humans: it is also the contributor map), then:

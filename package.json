@@ -27,7 +27,9 @@
     "docs",
     "README.md",
     "LICENSE",
-    "AGENTS.md"
+    "AGENTS.md",
+    "tsconfig.json",
+    "tsconfig.base.json"
   ],
   "sideEffects": [
     "**/*.css"

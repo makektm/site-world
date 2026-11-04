@@ -7,6 +7,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 
 // The example imports the library from source, so editing src/ hot-reloads.
 export default defineConfig({
+  base: "./", // relative assets, so the build works under any path (GitHub Pages, Cloudflare Pages)
   plugins: [react()],
   resolve: { alias: { "site-world": path.resolve(here, "../../src/index.ts") } },
 });

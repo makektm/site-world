@@ -57,13 +57,18 @@ import { SiteWorld, GridFloor, WallBoxes } from "site-world";
 
 ## Try it
 
+Needs [Bun](https://bun.sh) and Node 22+.
+
 ```bash
+git clone https://github.com/makektm/site-world.git
+cd site-world
 bun install
 bun run example:company   # ten microservices in four rooms, live (the screenshots above)
 bun run example           # the smallest world: one room, a door, a terminal, a pylon, and demons
 ```
 
-Both use only the public API.
+Both open at <http://localhost:5173>. Both use only the public API. The company example is also deployed
+as a live demo: <https://makektm.github.io/site-world/>.
 
 - [`examples/company/`](examples/company/) is a fictional company's ten microservices as a building:
   a room per domain, a pylon per service (its height is traffic, its orbiting cubes are replicas, its

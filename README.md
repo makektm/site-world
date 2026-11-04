@@ -1,6 +1,6 @@
-# site-world
+# Site World: your infrastructure, as a building you can walk through
 
-A walkable 3D operations room for [React Three Fiber](https://r3f.docs.pmnd.rs).
+`site-world` is a walkable 3D operations room for [React Three Fiber](https://r3f.docs.pmnd.rs).
 Draw your data as a *place*: rooms with boards on the walls, sliding doors, terminals you walk up to
 and press **E** at, an orbit camera for looking around and a first-person walk mode for being in it.
 It started as the live "SITE" view of an engineering dashboard and was lifted out as a library.
@@ -83,6 +83,20 @@ Both use only the public API.
 | **Doors** | `SiteDoor` data → leaf, frame, walk-up trigger, collider box. Slide or bi-parting. |
 | **Walk mode** | Capsule physics on an octree: crouch, jump, coyote time, ramps, a kill plane with checkpoints. |
 | **Doom** | A small, optional demon shooter that runs in your world's floor plan. |
+
+## Terminals
+
+A terminal's screen is your own React component, so it can be whatever your team needs.
+
+- **Full access.** Put a web terminal (such as [xterm.js](https://xtermjs.org)) on the screen and connect
+  it to your servers through your SSH gateway. Walk up to a service, press **E**, and you have a shell
+  on it.
+- **Restricted access.** Show only a set of buttons or commands you define: "restart", "tail logs",
+  "roll back", "open runbook". People can act on a service without getting a shell.
+
+You can mix both: full shells for the on-call team, restricted terminals for everyone else. Site World
+draws the screen and handles walking up to it; who can connect, and what they can run, stays in your
+own backend and its access rules.
 
 ## Install
 

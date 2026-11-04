@@ -62,3 +62,8 @@ export * from "./doom/doomStore";
 export * from "./doom/doomWorld";
 export * from "./doom/markArt";
 export * from "./doom/simpleWorld";
+
+// Catalog-driven layout: a building (or campus) planned from domains and services, level of detail, room graph
+export * from "./layout/catalogLayout";
+export * from "./layout/lod";
+export * from "./layout/planGraph";

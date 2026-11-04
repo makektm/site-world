@@ -526,3 +526,45 @@ Everything below is exported from `site-world`. One line each; read the source f
 | --- | --- | --- |
 | `RoomBounds` | interface |  |
 | `roomDoomConfig` | function | Demons walk `bounds` and are stopped by `walls`; they rise from eight points just inside the room (corners and wall midpoints). |
+
+## layout/
+
+### `layout/catalogLayout`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `CatalogDomain` | interface | A domain: one room in the plan. |
+| `CatalogService` | interface | A service: one slot in its domain's room. |
+| `Catalog` | interface | What `layoutCatalog` plans from. |
+| `FloorRect` | interface | An axis-aligned floor rectangle, the same shape as a host's BOUNDS (and GridFloor / FloorSolid props). |
+| `WingSpec` | interface | A named area the host reserves beside the buildings (a factory hall, a loading dock): placed, never walled. |
+| `CatalogLayoutOptions` | interface | Tuning for `layoutCatalog`; every field has a default. |
+| `LayoutRoom` | interface | One domain's room. |
+| `ServiceSlot` | interface | Where one service stands. |
+| `DoorLink` | interface | Which two rooms a door joins: `a` on its -x/-z side, `b` on its +x/+z side (OUTSIDE for an entrance). |
+| `LayoutBuilding` | interface |  |
+| `LayoutWing` | interface |  |
+| `CatalogPlan` | interface | Everything `layoutCatalog` returns: pass walls/doors/doorSigns/camera to SiteWorld, bounds to the floor. |
+| `OUTSIDE` | const | The room id on the far side of an entrance. |
+| `UNASSIGNED_DOMAIN` | const | The room services whose domain is not in the catalog end up in. |
+| `layoutCatalog` | function | Plans a building (or a campus of them) from a catalog: deterministic, overlap-free, every room reachable by doors. |
+
+### `layout/lod`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `Lod` | type | "detail": everything. |
+| `LodThresholds` | interface | Floor distances (metres) under which a thing is drawn at "detail", then "room". |
+| `LOD_THRESHOLDS` | const | About one large room across for detail (labels stay readable), two or three for room blocks. |
+| `lodFor` | function | The level for a floor distance; pass the level it has now to keep it from flickering at a threshold. |
+| `distanceToRect` | function | Floor distance from a point to the nearest edge of a rect; 0 inside it. |
+| `lodForRect` | function | `lodFor` the distance from a viewer's floor position (or a camera's 3D one, height included) to a room. |
+
+### `layout/planGraph`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `roomAt` | function | The room whose floor contains [x, z] (wall centre-lines count as inside the first room listed), or null. |
+| `roomNeighbours` | function | Room id -> the rooms one door away (OUTSIDE included when there are entrances), each list in door order. |
+| `reachableRooms` | function | Every room id (and OUTSIDE, if reachable) a walker starting in `from` can get to through doors. |
+| `doorPath` | function | The fewest-doors walk from one room to another, as the doors to pass in order; [] if already there, null if none. |

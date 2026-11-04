@@ -776,3 +776,149 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `useInfraPaint` | function | A `width` x `height` px canvas texture painted by `paint` whenever `deps` change, and once more when document fonts are ready — a canvas asked for 'IBM Plex Mono' before it loads silently draws the fallback. |
 | `InfraLabelProps` | interface |  |
 | `InfraLabel` | function | A one- or two-line name plate: a title in PAPER and an optional status line. |
+
+### `kit/GoToPalette`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `GoToTarget` | interface | Somewhere the palette can go. |
+| `GoToPaletteProps` | interface |  |
+| `GoToPalette` | function | A fuzzy go-to search over host targets; Enter calls `onGo`. |
+
+### `kit/InspectPanel`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `InspectTone` | type | How a value reads: the palette's status colours, or dimmed. |
+| `InspectField` | interface | One label/value row. |
+| `InspectSection` | interface | A titled block: rows, free content, or both (rows first). |
+| `InspectAction` | interface | A button along the panel's foot ("open runbook", "page owner"). |
+| `InspectPanelProps` | interface |  |
+| `InspectPanel` | function | A DOM side panel for the current selection, with a close button and Esc. |
+
+### `kit/LayerBar`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `LayerBarProps` | interface |  |
+| `LayerBar` | function | DOM chips for `useLayers`' state, with keyboard shortcuts 1..9. |
+
+### `kit/Selectable`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `SelectableProps` | interface |  |
+| `Selectable` | function | Wraps 3D children so they can be hovered and selected (orbit pointer, or the walk crosshair via <SelectionCrosshair>). |
+| `SelectionCrosshairProps` | interface |  |
+| `SelectionCrosshair` | function | Walk-mode picking: hovers the nearest <Selectable> under the screen centre within `reach` (walls in front of it block the ray), and selects it on E or a locked-pointer click. |
+
+### `kit/TimelineScrubber`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `TimelineEvent` | interface | Something that happened at `t` (epoch ms), drawn as a dot on the track. |
+| `TimelineSpeed` | interface | A playback rate (history ms per real ms) and what to call it. |
+| `DEFAULT_SPEEDS` | const | Real time up to an hour of history a second: factory history is hours to days long, and 1x alone would never get anywhere. |
+| `TimelineScrubberProps` | interface |  |
+| `TimelineScrubber` | function | DOM scrubber for `useTimeline`: range, play/pause, speed, LIVE, event markers. |
+
+### `kit/TourCaption`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `TourCaptionProps` | interface |  |
+| `TourCaption` | function | The DOM caption card for `useTour`; renders nothing when no tour runs. |
+
+### `kit/blastRadius`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `BlastEdge` | type | A directed edge, `from` -> `to` (e.g. |
+| `BlastDirection` | type | Which way to walk: `out` follows from->to, `in` walks back to->from (for call edges, "who breaks if this fails"), `both` ignores direction. |
+| `BlastHit` | interface | One reached node: hops from the nearest start, and the node it was reached from (null for a start). |
+| `blastRadius` | function | Every node reachable from `start` (one id or several) along `edges`, with its hop depth, in breadth-first order (starts first, at depth 0). |
+| `blastDepths` | function | The same result as a lookup, id -> depth, for colouring nodes. |
+| `blastPaths` | function | The edges of the shortest-path tree `hits` describes, as [via, id] pairs — the arcs a host lights to show how the blast travelled. |
+
+### `kit/fuzzy`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `fuzzyScore` | function | A score for `query` against `text` (higher is better), or null when the query's characters do not all appear in order. |
+| `Searchable` | interface | Anything the palette can search: a label, and optional extra words. |
+| `fuzzySearch` | function | `items` ranked by their best field match, best first; all of them, in their own order, for an empty query. |
+
+### `kit/goal`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `CameraGoal` | interface | What SiteWorld's `hostGoal` takes: the orbit camera's position and target. |
+| `Point3` | type |  |
+| `GoalOptions` | interface |  |
+| `goalFor` | function | A pleasing orbit-camera goal looking at `point`. |
+| `goalShifted` | function | The same goal moved so its target sits on `point`, the camera keeping its offset — how a follow tracks a mover without swinging. |
+| `goalNeedsMove` | function | True when `point` has moved at least `minMove` metres from where `goal` looks: SiteWorld restarts a whole eased flight on every new goal, so a follower should only issue one when the mover has really gone somewhere. |
+
+### `kit/layers`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `LayerDef` | interface | One layer the host offers. |
+| `LayerState` | type | Which layers are on, by id. |
+| `initialLayers` | function | The starting state: each layer's `defaultOn`, with at most one per group (the first that asks). |
+| `setLayerOn` | function | `state` with layer `id` set to `on`. |
+| `toggleLayer` | function | `state` with layer `id` flipped. |
+| `soloLayer` | function | `state` with only layer `id` on (or everything off, if it was already the only one). |
+| `LayersApi` | interface | What `useLayers` returns. |
+| `useLayers` | function | Toggle state for `defs`. |
+
+### `kit/selection`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `SelectionRef` | interface | One thing in the world a person can pick: what sort it is, and which. |
+| `SelectionState` | interface | The store's whole state. |
+| `SelectionStore` | interface | A selection store: read, write, subscribe. |
+| `sameRef` | function | True when both are null or both name the same thing. |
+| `createSelectionStore` | function | A fresh store, outside React; `useSelectionStore` makes one per component. |
+| `useSelectionStore` | function | One store for the life of the calling component. |
+| `SelectionApi` | interface | What `useSelection` returns: the state, plus the store's writers bound. |
+| `useSelection` | function | Subscribe to a selection store from either React tree. |
+| `selectionPrompt` | function | The walk-mode "[E] …" text for whatever the crosshair is on, for SiteWorld's `hostPrompt`; null when it is on nothing (or on the thing already selected, which E would not change). |
+
+### `kit/timeline`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `TimelineState` | interface | The playhead's state. |
+| `TimelineAction` | type |  |
+| `timelineReduce` | function | The next state for `action`, within [start, end]. |
+| `playheadAt` | function | Where the playhead is: `end` while live. |
+| `TimelineOptions` | interface |  |
+| `TimelineApi` | interface | What `useTimeline` returns. |
+| `useTimeline` | function | A playhead over [start, end]; the host may move both (a sliding window). |
+
+### `kit/tour`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `TourStop` | interface | One stop: either an explicit `goal`, or a point `at` framed by goalFor. |
+| `TourPosition` | interface | A tour's position: `index` is null when no tour is running. |
+| `TourAction` | type |  |
+| `tourStep` | function | The next position for `action` over `count` stops. |
+| `TourApi` | interface | What `useTour` returns. |
+| `useTour` | function | Step through `stops`. |
+
+### `kit/useFollow`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `FollowOptions` | interface |  |
+| `useFollow` | function | A goal for SiteWorld's `hostGoal` that tracks `getPoint()` while `active` (null when not active or the mover is gone). |
+
+### `kit/useKeydown`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `useKeydown` | function | Calls `handler` for every window keydown while `enabled`. |
+| `hasCommandModifier` | function | True for a key with Ctrl, Alt or Meta held — the browser's or the OS's, not the world's. |

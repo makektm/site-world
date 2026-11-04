@@ -67,3 +67,12 @@ export * from "./doom/simpleWorld";
 export * from "./layout/catalogLayout";
 export * from "./layout/lod";
 export * from "./layout/planGraph";
+
+// Kit: agents as visible workers, people presence, crowd and path helpers
+export * from "./kit/AgentFigure";
+export * from "./kit/AgentTrail";
+export * from "./kit/NameTag";
+export * from "./kit/PresenceMarker";
+export * from "./kit/agentPath";
+export * from "./kit/agentState";
+export * from "./kit/crowdLayout";

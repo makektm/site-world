@@ -568,3 +568,65 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `roomNeighbours` | function | Room id -> the rooms one door away (OUTSIDE included when there are entrances), each list in door order. |
 | `reachableRooms` | function | Every room id (and OUTSIDE, if reachable) a walker starting in `from` can get to through doors. |
 | `doorPath` | function | The fewest-doors walk from one room to another, as the doors to pass in order; [] if already there, null if none. |
+
+## kit/
+
+### `kit/AgentFigure`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `AgentBadge` | type | The glyph a blocked figure floats over its head. |
+| `AgentFigureProps` | interface | Props for {@link AgentFigure}. |
+| `AgentFigure` | function | One AI agent session as a small hovering drone with a state-coloured visor and a floating name tag. |
+
+### `kit/AgentTrail`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `AgentTrail` | function | A fading line of the recent path of `target`, drawn on the floor in the parent's space. |
+
+### `kit/NameTag`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `NameTag` | function | Floating, camera-facing text tag on a canvas texture; anchored at its bottom centre. |
+
+### `kit/PresenceMarker`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `PresenceMarkerProps` | interface | Props for {@link PresenceMarker}. |
+| `PresenceMarker` | function | A human teammate's presence: a standing silhouette on a ring in their colour, with their name. |
+
+### `kit/agentPath`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `PathPoint` | type | A point on the floor, [x, z] in metres. |
+| `AGENT_WALK_SPEED` | const | A human walking pace, m/s; what a figure on a path moves at unless told otherwise. |
+| `PathSample` | interface | One reading of a walk along a path. |
+| `floorHeading` | function | The heading (rotation about y) that turns +z toward `to` from `from`; 0 when the two coincide. |
+| `pathLength` | function | Total length of the path in metres; `loop` adds the leg from the last point back to the first. |
+| `samplePath` | function | The point `distance` metres along the path. |
+| `walkPath` | function | Where a walker is `elapsed` seconds after setting off along the path at `speed` m/s. |
+
+### `kit/agentState`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `AgentState` | type | The life of one agent session as the figure shows it. |
+| `AGENT_STATES` | const | Every state, in the order a legend lists them. |
+| `AGENT_STATE_COLOR` | const | The palette colour each state is drawn in. |
+| `AGENT_STATE_LABEL` | const | A short human word for each state, for tags and legends. |
+| `agentGlow` | function | The visor's brightness, 0..1, for `state` at time `t` seconds. |
+| `agentBob` | function | How high the figure hovers above its rest height, metres: a bob for idle and walking, nothing with `reduce`. |
+
+### `kit/crowdLayout`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `CrowdMember` | interface | One figure to place: a stable id and the spot it wants. |
+| `CrowdOptions` | interface | How close counts as "the same spot", and how far apart to spread. |
+| `crowdLayout` | function | Where each member should stand, by id: unchanged when alone, spread on rings when sharing a spot. |
+| `fanOut` | function | Offsets [dx, dz] for `n` figures round a centre, every pair at least `spacing` apart. |
+| `useCrowdLayout` | function | `crowdLayout`, memoised on the members' ids and spots rather than on the array's identity. |

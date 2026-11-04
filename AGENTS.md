@@ -12,6 +12,7 @@ bun run test           # vitest (jsdom). Includes the boundary test and the docs
 bun run check          # typecheck (src, scripts, example) + test
 bun run example        # hot-reloading demo (examples/basic)
 bun run reference      # (uses node) regenerate docs/REFERENCE.md from the code (CI fails if it is stale)
+bun run screenshot     # (uses node + Playwright) regenerate media/*.png, the README images, from the example
 ```
 
 Never run a bare binary; use the scripts so config and caching apply.

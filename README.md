@@ -5,6 +5,12 @@ Draw your data as a *place*: rooms with boards on the walls, sliding doors, term
 and press **E** at, an orbit camera for looking around and a first-person walk mode for being in it.
 It started as the live "SITE" view of an engineering dashboard and was lifted out as a library.
 
+| Orbit view of the example world | A terminal, powered |
+| --- | --- |
+| ![The example world from the orbit camera: a room with a plinth, a doorway with a sliding door, and an annex](media/overview.png) | ![The notes terminal powered on: a green-phosphor screen standing over its plinth](media/terminal.png) |
+
+<sub>Both from `examples/basic`. Regenerate with `bun run screenshot`.</sub>
+
 ```tsx
 import { SiteWorld, GridFloor, WallBoxes } from "site-world";
 

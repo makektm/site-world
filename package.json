@@ -43,6 +43,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "reference": "node scripts/reference.mjs",
+    "screenshot": "node scripts/screenshot.mjs",
     "check": "bun run typecheck && bun run test && bun run --filter site-world-example-basic typecheck",
     "example": "bun run --filter site-world-example-basic dev"
   },

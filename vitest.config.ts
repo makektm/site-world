@@ -1,6 +1,10 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  // Example tests import the library the way the examples do; vite resolves
+  // the bare name through each example's own config, vitest needs it here.
+  resolve: { alias: { "site-world": fileURLToPath(new URL("./src/index.ts", import.meta.url)) } },
   test: {
     environment: "jsdom",
     // Examples may carry tests for their own pure data helpers; the glob is

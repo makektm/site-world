@@ -8,7 +8,7 @@ import { PAPER, PAPER_DIM, fitText, useCanvasTexture, type LayoutWing } from "si
 const LABEL_H = 1.4;
 const PX = 160;
 
-function GroundLabel({ text, x, z, width }: { text: string; x: number; z: number; width: number }) {
+function GroundLabel({ text, x, z, width, flip }: { text: string; x: number; z: number; width: number; flip: boolean }) {
   const { canvas, texture } = useCanvasTexture(Math.round(width * PX), Math.round(LABEL_H * PX));
   useEffect(() => {
     const ctx = canvas.getContext("2d");
@@ -34,7 +34,7 @@ function GroundLabel({ text, x, z, width }: { text: string; x: number; z: number
     };
   }, [canvas, texture, text]);
   return (
-    <mesh position={[x, 0.016, z]} rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh position={[x, 0.016, z]} rotation={[-Math.PI / 2, 0, flip ? Math.PI : 0]}>
       <planeGeometry args={[width, LABEL_H]} />
       <meshBasicMaterial map={texture} transparent toneMapped={false} depthWrite={false} />
     </mesh>
@@ -71,7 +71,8 @@ function Wing({ wing }: { wing: LayoutWing }) {
   return (
     <>
       <Line points={outline} color={PAPER_DIM} lineWidth={1} transparent opacity={0.5} dashed dashSize={0.4} gapSize={0.25} />
-      <GroundLabel text={wing.label} x={(minX + maxX) / 2} z={z} width={Math.min(maxX - minX - 1, 9)} />
+      {/* Upright for someone walking out to it from the building. */}
+      <GroundLabel text={wing.label} x={(minX + maxX) / 2} z={z} width={Math.min(maxX - minX - 1, 9)} flip={wing.side === "south"} />
     </>
   );
 }

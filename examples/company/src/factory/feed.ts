@@ -1,6 +1,6 @@
 // The factory as one live value for the host, plus a replay of any moment.
 //
-// Same contract as services.ts's useFeed: a module-level store read through
+// A module-level store read through
 // useSyncExternalStore, ticking only while something is subscribed, and the
 // snapshot object changes identity once per tick (never per render), which
 // is what useSyncExternalStore needs to avoid render loops.

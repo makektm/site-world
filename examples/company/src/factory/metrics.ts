@@ -1,10 +1,10 @@
 // Live request metrics for every factory service, as a pure function of tick.
 //
-// services.ts keeps its own stream-based feed for the original ten; this one
-// covers all of the catalogue and is hashed from (service, tick) so the
-// timeline replay can ask for any tick. The incidents match services.ts's
-// story (a payments replica down) plus the factory's own: fraud-score slows
-// whenever the LLM provider has its bad stretch (infra.ts).
+// It covers all of the catalogue and is hashed from (service, tick) so the
+// timeline replay can ask for any tick (liveFeed.ts derives the dashboards'
+// sparklines the same way). The incidents: a payments replica down and
+// analytics-worker slow, plus the factory's own: fraud-score slows whenever
+// the LLM provider has its bad stretch (infra.ts).
 import { SERVICES, type FactoryService } from "./catalog";
 import { hashString, noise } from "./rand";
 

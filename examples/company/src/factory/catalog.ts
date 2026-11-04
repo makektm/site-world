@@ -116,7 +116,7 @@ const created: FactoryService[] = [
 
 export const SERVICES: readonly FactoryService[] = [...originals, ...created];
 
-/** Who calls whom: [caller, callee]. The first eleven are services.ts's CALLS. */
+/** Who calls whom: [caller, callee]. The first eleven are the original ten's calls. */
 export const CALLS: readonly (readonly [string, string])[] = [
   ["web-frontend", "api-gateway"],
   ["api-gateway", "auth"],

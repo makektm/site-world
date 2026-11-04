@@ -25,12 +25,12 @@ const PORT = 4319;
 const URL = `http://localhost:${PORT}/`;
 // CSS pixels; written at 2x for high-density screens.
 const VIEW = { width: 1200, height: 700 };
-// Copied from examples/company (App.tsx CAMERA, oncallRoom.tsx ONCALL_PLINTH)
+// Copied from examples/company (plan.ts CAMERA and ONCALL_PLINTH, the EDGE room's middle)
 // to find the plinth on screen. If they drift, the powered-screen check below
 // fails the run instead of writing a dark shot.
-const HOME = [3, 21, 17];
-const TARGET = [0, 0, 0.5];
-const PLINTH = [-2.2, 0.8, -8];
+const HOME = [0, 25, 10.5];
+const TARGET = [0, 0, -1];
+const PLINTH = [-14, 0.8, -4.6];
 const FOV = 40; // SiteWorld's
 
 let chromium;

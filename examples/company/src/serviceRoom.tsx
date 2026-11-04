@@ -1,7 +1,8 @@
 // One domain's room: a pylon per service, its replicas in orbit round it, its
 // name on the floor, and a live dashboard on the wall. Every domain room is
-// this factory with different data — adding a fifth domain is a list entry,
-// not a new component.
+// this factory with different data: the room, its slots and the board's wall
+// come from the catalog plan (plan.ts), so a new domain or service is a
+// catalogue entry, not a new component or a hand-measured coordinate.
 //
 // What the shapes mean:
 //   pylon height   traffic (rps), on a log scale, easing as it changes
@@ -17,8 +18,12 @@ import {
   BOARD_STANDOFF, CRITICAL, INFO, INK, OK, PAPER, PAPER_DIM, WALL_FILL, WARN,
   defineRoom, fitText, getGlowTexture, hungOnWall, orbitAngle, orbitPos, ringPoints, useCanvasTexture,
 } from "site-world";
-import { ROOMS } from "./layout";
-import { HEALTH_LABEL, SERVICES, useFeed, type Domain, type Health, type ServiceDef, type ServiceState } from "./services";
+import type { LayoutRoom, ServiceSlot } from "site-world";
+import type { FactoryService } from "./factory/catalog";
+import { HEALTH_LABEL, useFeed, type Health, type ServiceState } from "./liveFeed";
+import type { BoardSpot } from "./plan";
+
+type Slot = ServiceSlot<FactoryService>;
 
 export const HEALTH_COLOR: Record<Health, string> = { ok: OK, warn: WARN, down: CRITICAL };
 
@@ -31,13 +36,14 @@ export function pylonHeight(rps: number): number {
   return 1.2 + Math.max(0, Math.log10(Math.max(rps, 1) / 100)) * 1.5;
 }
 
-function Pylon({ def, state }: { def: ServiceDef; state: ServiceState }) {
+/** A pylon, drawn about its own origin; the caller's group puts it on its slot,
+ * turned so the name plate (local +z) faces the aisle. */
+function Pylon({ def, state, phase }: { def: FactoryService; state: ServiceState; phase: number }) {
   const shaft = useRef<Mesh>(null);
   const top = useRef<Group>(null);
   const cubes = useRef<(Group | null)[]>([]);
   const live = useRef({ h: pylonHeight(state.rps) });
-  const phase = useMemo(() => (def.at[0] * 7 + def.at[1] * 3) % 1, [def.at]);
-  const ring = useMemo(() => ringPoints(def.at as [number, number], ORBIT_R, 0.02, 48), [def.at]);
+  const ring = useMemo(() => ringPoints([0, 0], ORBIT_R, 0.02, 48), []);
   const want = pylonHeight(state.rps);
   const color = HEALTH_COLOR[state.health];
 
@@ -56,7 +62,7 @@ function Pylon({ def, state }: { def: ServiceDef; state: ServiceState }) {
       if (!g) return;
       // A dead replica drops out of orbit and sits on the floor ring.
       const speed = r === "down" ? 0 : SPIN;
-      const [x, z] = orbitPos(def.at as [number, number], ORBIT_R, orbitAngle(phase + i / n, r === "down" ? 0 : t, speed));
+      const [x, z] = orbitPos([0, 0], ORBIT_R, orbitAngle(phase + i / n, r === "down" ? 0 : t, speed));
       const y = r === "down" ? 0.12 : 0.9 + (h - 0.9) * ((i + 0.5) / n);
       g.position.set(x, y, z);
       g.rotation.y = r === "down" ? 0.4 : t * 1.4 + i;
@@ -65,12 +71,12 @@ function Pylon({ def, state }: { def: ServiceDef; state: ServiceState }) {
 
   return (
     <group>
-      <mesh ref={shaft} position={[def.at[0], 0.5, def.at[1]]}>
+      <mesh ref={shaft} position={[0, 0.5, 0]}>
         <cylinderGeometry args={[PYLON_R * 0.7, PYLON_R, 1, 6]} />
         <meshBasicMaterial color={WALL_FILL} />
         <Edges color={PAPER} />
       </mesh>
-      <group ref={top} position={[def.at[0], 2, def.at[1]]}>
+      <group ref={top} position={[0, 2, 0]}>
         <mesh>
           <octahedronGeometry args={[0.17, 0]} />
           <meshBasicMaterial color={color} toneMapped={false} />
@@ -100,7 +106,7 @@ function Pylon({ def, state }: { def: ServiceDef; state: ServiceState }) {
 }
 
 /** The service's name and its numbers, painted on the floor in front of it. */
-function NamePlate({ def, state }: { def: ServiceDef; state: ServiceState }) {
+function NamePlate({ def, state }: { def: FactoryService; state: ServiceState }) {
   const W = 2.3;
   const H = 0.62;
   const { canvas, texture } = useCanvasTexture(Math.round(W * 260), Math.round(H * 260));
@@ -130,7 +136,7 @@ function NamePlate({ def, state }: { def: ServiceDef; state: ServiceState }) {
     };
   }, [canvas, texture, def.name, line, state.health]);
   return (
-    <mesh position={[def.at[0], 0.015, def.at[1] + ORBIT_R + 0.55]} rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh position={[0, 0.015, ORBIT_R + 0.55]} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[W, H]} />
       <meshBasicMaterial map={texture} transparent toneMapped={false} depthWrite={false} />
     </mesh>
@@ -142,7 +148,7 @@ const BOARD_W = 3.8;
 const BOARD_H = 2.1;
 const PX = 300;
 
-function drawBoard(ctx: CanvasRenderingContext2D, w: number, h: number, title: string, rows: readonly [ServiceDef, ServiceState][]) {
+function drawBoard(ctx: CanvasRenderingContext2D, w: number, h: number, title: string, rows: readonly [FactoryService, ServiceState][]) {
   const mono = (px: number, bold = false) => `${bold ? "700 " : ""}${px}px 'IBM Plex Mono', ui-monospace, monospace`;
   ctx.fillStyle = INK;
   ctx.fillRect(0, 0, w, h);
@@ -211,7 +217,7 @@ function Board({ title, wall, rotationY, rows }: {
   title: string;
   wall: readonly [number, number];
   rotationY: number;
-  rows: readonly [ServiceDef, ServiceState][];
+  rows: readonly [FactoryService, ServiceState][];
 }) {
   const { canvas, texture } = useCanvasTexture(BOARD_W * PX, BOARD_H * PX);
   useEffect(() => {
@@ -240,27 +246,39 @@ function Board({ title, wall, rotationY, rows }: {
 }
 
 export interface ServiceRoomSpec {
-  domain: Domain;
-  /** Where the dashboard hangs: a wall centre-line point and the turn that
-   * faces it into the room (0 faces +z, PI -z, PI/2 +x, -PI/2 -x). */
-  board: { wall: readonly [number, number]; rotationY: number };
+  /** The room from the plan: its id is the domain, its label titles the board. */
+  room: LayoutRoom;
+  /** The room's service slots, in the plan's order. */
+  slots: readonly Slot[];
+  /** Where the dashboard hangs. */
+  board: BoardSpot;
 }
 
-export function serviceRoom({ domain, board }: ServiceRoomSpec) {
-  const defs = SERVICES.filter((s) => s.domain === domain);
-  const info = ROOMS[domain];
+/** Stable per service, so replicas start spread round the ring instead of in step. */
+function phaseOf(slot: Slot): number {
+  return (slot.pos[0] * 7 + slot.pos[1] * 3 + slot.index * 0.37) % 1;
+}
+
+export function serviceRoom({ room, slots, board }: ServiceRoomSpec) {
   return defineRoom({
-    id: domain,
+    id: room.id,
     useModel() {
       const feed = useFeed();
       // A new array only when the feed ticks, so the board repaints once a tick.
-      return useMemo(() => defs.map((d) => [d, feed[d.name]!] as [ServiceDef, ServiceState]), [feed]);
+      return useMemo(() => slots.map((s) => [s.service, feed[s.name]!] as [FactoryService, ServiceState]), [feed]);
     },
     Scene({ model }) {
       return (
         <>
-          {model.map(([def, state]) => <Pylon key={def.name} def={def} state={state} />)}
-          <Board title={info.name} wall={board.wall} rotationY={board.rotationY} rows={model} />
+          {model.map(([def, state], i) => {
+            const slot = slots[i]!;
+            return (
+              <group key={def.name} position={[slot.pos[0], 0, slot.pos[1]]} rotation={[0, slot.facing, 0]}>
+                <Pylon def={def} state={state} phase={phaseOf(slot)} />
+              </group>
+            );
+          })}
+          <Board title={room.label} wall={board.wall} rotationY={board.rotationY} rows={model} />
         </>
       );
     },
@@ -268,8 +286,8 @@ export function serviceRoom({ domain, board }: ServiceRoomSpec) {
     Colliders() {
       return (
         <>
-          {defs.map((d) => (
-            <mesh key={d.name} position={[d.at[0], 2, d.at[1]]}>
+          {slots.map((s) => (
+            <mesh key={s.name} position={[s.pos[0], 2, s.pos[1]]}>
               <cylinderGeometry args={[PYLON_R + 0.05, PYLON_R + 0.05, 4, 8]} />
             </mesh>
           ))}

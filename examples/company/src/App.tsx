@@ -1,27 +1,23 @@
-// A company with ten microservices, as a building: one room per domain, a
-// pylon per service, live dashboards, and the calls between services running
-// overhead. See services.ts for the data and what to swap in for real.
+// A company's software factory, as a building: one room per domain laid out
+// from the service catalogue, a pylon per service, live dashboards, the calls
+// between services running overhead, a hall for the work line and a dock for
+// what the company buys in. See factory/ for the data and plan.ts for how it
+// becomes a floor plan.
 import { useMemo, useRef, useState } from "react";
-import { FloorSolid, GridFloor, SiteWorld, WallBoxes, WallSolids, type SiteCamera } from "site-world";
-import { BOUNDS, DOORS, DOOR_SIGNS, HALF, WALLS } from "./layout";
+import { FloorSolid, GridFloor, SiteWorld, WallBoxes, WallSolids } from "site-world";
+import { CALLS } from "./factory/catalog";
+import { useFeed } from "./liveFeed";
 import { oncallRoom } from "./oncallRoom";
+import { CAMERA, PLAN, YARD, boardSpot } from "./plan";
 import { serviceRoom } from "./serviceRoom";
-import { useFeed } from "./services";
 import { Traffic } from "./Traffic";
-
-export const CAMERA: SiteCamera = {
-  home: [3, 21, 17],
-  target: [0, 0, 0.5],
-  walkStart: [1.4, 9.0],
-  walkLookAt: [8.5, 1.9, 4.2],
-};
+import { Wings } from "./Wings";
 
 // A module constant: rooms' hooks run in this order on every render.
 const ROOMS = [
-  serviceRoom({ domain: "edge", board: { wall: [-4.5, -HALF], rotationY: 0 } }),
-  serviceRoom({ domain: "commerce", board: { wall: [5, -HALF], rotationY: 0 } }),
-  serviceRoom({ domain: "payments", board: { wall: [HALF, 5], rotationY: -Math.PI / 2 } }),
-  serviceRoom({ domain: "platform", board: { wall: [-HALF, 5], rotationY: Math.PI / 2 } }),
+  ...PLAN.rooms.map((room) =>
+    serviceRoom({ room, slots: room.services.map((name) => PLAN.slotByName[name]!), board: boardSpot(room) }),
+  ),
   oncallRoom,
 ];
 
@@ -32,8 +28,8 @@ export function App() {
   const solids = useMemo(
     () => (
       <>
-        <FloorSolid {...BOUNDS} />
-        <WallSolids walls={WALLS} />
+        <FloorSolid {...YARD} />
+        <WallSolids walls={PLAN.walls} />
       </>
     ),
     [],
@@ -51,16 +47,17 @@ export function App() {
           reduce={false}
           camera={CAMERA}
           rooms={ROOMS}
-          doors={DOORS}
-          doorSigns={DOOR_SIGNS}
+          doors={PLAN.doors}
+          doorSigns={PLAN.doorSigns}
           solids={solids}
           cameraRef={cameraRef}
           onOpenPage={(to) => console.info("open", to)}
           walkHint="click to lock the cursor · WASD · shift to crouch · E to use · Esc to release"
         >
-          <GridFloor {...BOUNDS} />
-          <WallBoxes walls={WALLS} />
-          <Traffic feed={feed} />
+          <GridFloor {...YARD} />
+          <WallBoxes walls={PLAN.walls} />
+          <Wings wings={PLAN.wings} />
+          <Traffic calls={CALLS} slots={PLAN.slotByName} feed={feed} />
         </SiteWorld>
       </div>
     </>

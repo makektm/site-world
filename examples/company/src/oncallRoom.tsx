@@ -1,14 +1,20 @@
 // The on-call console in EDGE: a terminal on a plinth whose screen is real DOM
 // (so it could be your incident tool, your runbooks, a shell). Here it lists
-// every service and what is wrong right now.
+// what is wrong right now, then the busiest of the rest — the whole catalogue
+// no longer fits on one screen.
 import {
   CONSOLE_PX_H, CONSOLE_PX_W, ConsoleRig, Plinth, PointProximity, defineRoom,
 } from "site-world";
+import { SERVICES } from "./factory/catalog";
+import { HEALTH_LABEL, useFeed } from "./liveFeed";
+import { ONCALL_PLINTH } from "./plan";
 import { HEALTH_COLOR } from "./serviceRoom";
-import { HEALTH_LABEL, SERVICES, useFeed } from "./services";
 
 const ID = "oncall";
-export const ONCALL_PLINTH: readonly [number, number] = [-2.2, -8];
+/** As many rows as fit the console's screen under its header and above its buttons. */
+const ROWS = 13;
+// Runbook buttons share one line with exit.
+const RUNBOOKS = 3;
 const OFFSET = 0.64 / 2 + 0.14;
 
 export const oncallRoom = defineRoom({
@@ -41,7 +47,10 @@ export const oncallRoom = defineRoom({
   Overlay({ model: feed, env }) {
     const term = env.terminals.get(ID);
     const incidents = SERVICES.filter((s) => feed[s.name]!.health !== "ok");
-    const cell = { padding: "5px 10px" } as const;
+    const calm = SERVICES.filter((s) => feed[s.name]!.health === "ok").sort((a, b) => feed[b.name]!.rps - feed[a.name]!.rps);
+    const rows = [...incidents, ...calm].slice(0, ROWS);
+    const hidden = SERVICES.length - rows.length;
+    const cell = { padding: "2px 10px" } as const;
     return (
       <div className="sw-screen" ref={term.screenRef} style={{ visibility: "hidden" }}>
         {term.rig && (
@@ -53,14 +62,14 @@ export const oncallRoom = defineRoom({
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", color: "#9dffbe", fontSize: 24 }}>
-              <span>ON-CALL · 10 SERVICES</span>
+              <span>ON-CALL · {SERVICES.length} SERVICES</span>
               <span style={{ color: incidents.length ? HEALTH_COLOR.warn : HEALTH_COLOR.ok }}>
                 {incidents.length ? `${incidents.length} NEED ATTENTION` : "ALL CLEAR"}
               </span>
             </div>
             <table style={{ borderCollapse: "collapse", width: "100%" }}>
               <tbody>
-                {SERVICES.map((s) => {
+                {rows.map((s) => {
                   const st = feed[s.name]!;
                   return (
                     <tr key={s.name} style={{ borderBottom: "1px solid #0e3a22" }}>
@@ -74,8 +83,9 @@ export const oncallRoom = defineRoom({
                 })}
               </tbody>
             </table>
+            {hidden > 0 && <div style={{ color: "#7fa98f" }}>… {hidden} more, all OK</div>}
             <div style={{ display: "flex", gap: 12, marginTop: "auto" }}>
-              {incidents.map((s) => (
+              {incidents.slice(0, RUNBOOKS).map((s) => (
                 <button
                   key={s.name}
                   onClick={() => env.onOpenPage(`/runbooks/${s.name}`)}

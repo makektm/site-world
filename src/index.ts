@@ -83,3 +83,15 @@ export * from "./kit/Crate";
 export * from "./kit/Station";
 export * from "./kit/WorkLine";
 export * from "./kit/workLineLayout";
+
+// Infrastructure and annotation props: tanks, queue pipes, the loading dock,
+// meters, floor heat, locks and keys, sticky notes
+export * from "./kit/FloorHeat";
+export * from "./kit/LoadingDock";
+export * from "./kit/Meter";
+export * from "./kit/Padlock";
+export * from "./kit/QueuePipe";
+export * from "./kit/StickyNote";
+export * from "./kit/Tank";
+export * from "./kit/infraMath";
+export * from "./kit/infraPaint";

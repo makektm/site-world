@@ -685,3 +685,94 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `Placement` | type | Where a crate is headed. |
 | `WorkLineLayout` | interface |  |
 | `layoutWorkLine` | function | Places every item. |
+
+### `kit/FloorHeat`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `FloorHeatProps` | interface |  |
+| `FloorHeat` | function | A floor overlay heat map built from {x, z, value} points. |
+
+### `kit/LoadingDock`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `DockBay` | interface |  |
+| `LoadingDockProps` | interface |  |
+| `LoadingDock` | function | A platform of bays for external dependencies, each with crates, a status light and a latency/error badge. |
+
+### `kit/Meter`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `MeterProps` | interface |  |
+| `Meter` | function | A cost/spend gauge — dial or bar column — with label, value and an optional budget line. |
+
+### `kit/Padlock`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `PadlockProps` | interface |  |
+| `Padlock` | function | A padlock to hang on anything restricted. |
+| `KeyBadgeProps` | interface |  |
+| `KeyBadge` | function | A small floating key, to attach to an agent that holds a secret. |
+
+### `kit/QueuePipe`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `QueuePipeProps` | interface |  |
+| `QueuePipe` | function | A pipe between two points whose packets show a queue's backlog and throughput. |
+
+### `kit/StickyNote`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `NoteAuthorKind` | type |  |
+| `NOTE_PAPER` | const | Paper tints rather than the status colours themselves: a note is a thing, not an alert, and INK text must stay readable on it. |
+| `NOTE_ACCENT` | const | The stripe and author colour on each kind of note. |
+| `StickyNoteProps` | interface |  |
+| `StickyNote` | function | A paper note with short text and an author, tinted by human vs agent. |
+
+### `kit/Tank`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `TankProps` | interface |  |
+| `Tank` | function | A storage tank: glass shell, coloured liquid at `fill`, optional growth ripple and label. |
+
+### `kit/infraMath`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `InfraHealth` | type | The three states every infra prop colours by. |
+| `INFRA_HEALTH_COLOR` | const | Health -> palette colour, the same mapping the company example's pylons use. |
+| `QueuePacking` | interface |  |
+| `queuePacking` | function | Backlog -> how a QueuePipe packs its packets. |
+| `packetT` | function | Where packet `i` of `count` sits along the pipe, 0 at the inlet and 1 at the outlet, at `phase` laps. |
+| `packetSpacing` | function | All packet positions at once; see packetT. |
+| `packetSpeed` | function | Throughput (messages/s) -> laps of the pipe per second, on a log scale: about one lap every 6s at 1/s and every 2s at 1000/s. |
+| `unitFill` | function | Any fill, ratio or level clamped into 0..1 (NaN reads as empty). |
+| `BudgetState` | type |  |
+| `budgetState` | function | Spend against a budget: warn from `warnAt` of it (default 80%), over past it. |
+| `BUDGET_COLOR` | const | BudgetState -> palette colour. |
+| `dialAngle` | function | A dial's needle angle for `value` of `max`, sweeping `sweep` radians clockwise from the left (−sweep/2 is the zero mark, +sweep/2 is full). |
+| `compactNumber` | function | Short human figure: 950, 1.2k, 34k, 1.5M. |
+| `bayOffsets` | function | Centres (along the dock's local x) of `count` bays `bayWidth` wide with `gap` between them, the row centred on 0. |
+| `bayRowWidth` | function | Total width of that row of bays, for sizing the platform under it. |
+| `HeatPoint` | interface |  |
+| `HeatBounds` | interface |  |
+| `HeatGrid` | interface |  |
+| `heatBounds` | function | The smallest rectangle round every point, grown by `pad` metres on each side. |
+| `heatGrid` | function | Splats each point as a gaussian of `radius` metres (the falloff's 1-sigma) onto a grid of `cellSize`-metre cells covering `bounds`, and normalises to 0..1 against the hottest cell or `fixedMax`. |
+| `heatColor` | function | 0..1 -> [r, g, b, a] bytes on the heat ramp; alpha rises with heat so the cold edge of the overlay fades into the floor rather than ending in a square. |
+| `wrapLines` | function | Greedy word wrap against any width measure (a canvas's measureText in the scene, a character count in tests). |
+
+### `kit/infraPaint`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `infraFont` | function | The mono stack every painted surface in the world uses. |
+| `useInfraPaint` | function | A `width` x `height` px canvas texture painted by `paint` whenever `deps` change, and once more when document fonts are ready — a canvas asked for 'IBM Plex Mono' before it loads silently draws the fallback. |
+| `InfraLabelProps` | interface |  |
+| `InfraLabel` | function | A one- or two-line name plate: a title in PAPER and an optional status line. |

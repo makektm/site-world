@@ -49,7 +49,10 @@ A door is data (`SiteDoor`): `{ id, code, doorway: { center, axis, halfWidth }, 
 them the engine draws leaves and frames, runs one walk-up trigger each, and adds a collider box across
 each *closed* door's gap to a separate small octree (three's `Octree` has no incremental update, so a
 door toggle must not rebuild the static world). The wall above a door is yours: put a header box of
-height `WALL - DOOR_H` over the gap in your walls so a closed door meets it.
+height `WALL - DOOR_H` over the gap in your walls so a closed door meets it. `doorStyle` (`"steel"` by
+default, or `"plain"`) only chooses what is drawn: `doorParts(style)` selects the frame and leaf components
+(plain has a flat leaf and no frame), and the lit environment (`DoorLighting`) is mounted for steel alone. A
+plain door is one `meshBasicMaterial` box with edges and creates no textures.
 
 ## Walk physics
 

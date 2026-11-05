@@ -20,10 +20,10 @@ export const CRITICAL = "#FF6877";
 export const PHOS = "#58e892";
 export const PHOS_HI = "#9dffbe";
 // Wall fill: opaque, but deliberately dark — near INK, not PAPER — so a
-// door (solid PAPER, see SlidingDoor.tsx's DoorFace: "a door has to read as
-// an actual barrier") still reads as visually distinct from the wall around
-// it. Edges keep the same cream line-drawing accent every other solid prop
-// in the room carries.
+// plain door (a solid PAPER slab, no frame, see PlainDoorLeaf.tsx: "a door has
+// to read as an actual barrier") still reads as visually distinct from the
+// wall around it. Edges keep the same cream line-drawing accent every other
+// solid prop in the room carries.
 export const WALL_FILL = "#141a24";
 
 export const WALL = 4.2;

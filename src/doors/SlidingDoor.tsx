@@ -19,6 +19,8 @@ import { damp } from "maath/easing";
 import type { Group, Mesh } from "three";
 import { DoorFrame } from "./DoorFrame";
 import { DoorLeaf } from "./DoorLeaf";
+import { PlainDoorLeaf } from "./PlainDoorLeaf";
+import { DEFAULT_DOOR_STYLE, type DoorStyle } from "./doorStyle";
 import {
   COLLIDER_WALL_T,
   DOOR_H,
@@ -33,6 +35,17 @@ const LEAF_T = COLLIDER_WALL_T - 0.08;
 // How much of its height a rolled-up leaf keeps, hanging under the header.
 const ROLLED_UP = 0.03;
 
+/** The components a door style draws with: steel is a frame and a leaf, plain
+ * is a flat leaf and no frame (`Frame` is null). Both leaves take the same
+ * props (`w`, `d`), so a door picks its parts here and lays them out the same
+ * way. Choosing between components, not between hooks, keeps each component's
+ * hooks unconditional and the plain parts free of textures. */
+export function doorParts(style: DoorStyle) {
+  return style === "plain"
+    ? { Frame: null, Leaf: PlainDoorLeaf }
+    : { Frame: DoorFrame, Leaf: DoorLeaf };
+}
+
 /** The visual leaf: `axis` is which way the doorway gap runs — "x" for a
  * doorway in a north/south wall, "z" for one in an east/west wall. The leaf hangs
  * from a group at DOOR_H, so scaling the group's y scales the leaf toward its
@@ -42,15 +55,17 @@ const ROLLED_UP = 0.03;
  * duration-based tween instead: a door toggles back and forth, a camera
  * flight doesn't. */
 export function SlidingDoor({
-  open, center, axis, halfWidth, code,
+  open, center, axis, halfWidth, code, doorStyle = DEFAULT_DOOR_STYLE,
 }: {
-  /** The short stencil on the frame's ID plate. */
+  /** The short stencil on the frame's ID plate (steel style only). */
   code: string;
   open: boolean;
   center: readonly [number, number];
   axis: "x" | "z";
   halfWidth: number;
+  doorStyle?: DoorStyle;
 }) {
+  const { Frame, Leaf } = doorParts(doorStyle);
   const ref = useRef<Group>(null);
   useFrame((_, delta) => {
     if (!ref.current) return;
@@ -60,10 +75,10 @@ export function SlidingDoor({
   const d = axis === "z" ? halfWidth * 2 : LEAF_T;
   return (
     <>
-      <DoorFrame center={center} axis={axis} halfWidth={halfWidth} open={open} code={code} />
+      {Frame && <Frame center={center} axis={axis} halfWidth={halfWidth} open={open} code={code} />}
       <group ref={ref} position={[center[0], DOOR_H, center[1]]}>
         <mesh position={[0, -DOOR_H / 2, 0]}>
-          <DoorLeaf w={w} d={d} />
+          <Leaf w={w} d={d} />
         </mesh>
       </group>
     </>
@@ -85,14 +100,16 @@ export function SlidingDoor({
  * a panel lies inside that wall's box (LEAF_T is thinner than the wall) and
  * is hidden by its faces. */
 export function BiPartingDoor({
-  open, center, axis, halfWidth, code,
+  open, center, axis, halfWidth, code, doorStyle = DEFAULT_DOOR_STYLE,
 }: {
   code: string;
   open: boolean;
   center: readonly [number, number];
   axis: "x" | "z";
   halfWidth: number;
+  doorStyle?: DoorStyle;
 }) {
+  const { Frame, Leaf } = doorParts(doorStyle);
   const negRef = useRef<Mesh>(null);
   const posRef = useRef<Mesh>(null);
   const closedOffset = halfWidth / 2;
@@ -112,12 +129,12 @@ export function BiPartingDoor({
     : [center[0], DOOR_H / 2, center[1] + closedOffset];
   return (
     <>
-      <DoorFrame center={center} axis={axis} halfWidth={halfWidth} open={open} code={code} />
+      {Frame && <Frame center={center} axis={axis} halfWidth={halfWidth} open={open} code={code} />}
       <mesh ref={negRef} position={negPos}>
-        <DoorLeaf w={w} d={d} />
+        <Leaf w={w} d={d} />
       </mesh>
       <mesh ref={posRef} position={posPos}>
-        <DoorLeaf w={w} d={d} />
+        <Leaf w={w} d={d} />
       </mesh>
     </>
   );

@@ -114,7 +114,7 @@ Both use only the public API.
 | `<SiteWorld>` | The viewport: canvas, orbit/walk cameras, doors, rooms, terminals, the DOM layer for screens. |
 | **Rooms** (`defineRoom`) | One module = one room: `useModel` (data), `Scene` (3D), `Overlay` (DOM screen), `Colliders`, `prompt`. |
 | **Terminals** | A screen on a plinth. One slot powers at most one at a time; walking up never powers it, **E** (or a click in orbit) does. |
-| **Doors** | `SiteDoor` data → leaf, frame, walk-up trigger, collider box. Slide or bi-parting. |
+| **Doors** | `SiteDoor` data → leaf, frame, walk-up trigger, collider box. Slide or bi-parting; brushed steel, or `doorStyle="plain"` for a flat slab, no frame, that costs no textures or lights. |
 | **Walk mode** | Capsule physics on an octree: crouch, jump, coyote time, ramps, a kill plane with checkpoints. |
 | **Layout** | `layoutCatalog`: a building planned from your domains and services. |
 | **Kit** | Agents, people, the work line, tanks, queues, the dock, and the interactions above (inspect, layers, go-to, follow, timeline, tours). |

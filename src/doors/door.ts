@@ -6,7 +6,7 @@ import type { Doorway } from "../core/engine";
 /** A door as data: id, three-letter code, the doorway (centre, axis, half-width) and how it opens. */
 export type SiteDoor = {
   id: string;
-  /** The short stencil on the frame's ID plate. */
+  /** The short stencil on the steel frame's ID plate (the plain style draws no frame, so no code). */
   code: string;
   doorway: Doorway;
   /** `slide`: one leaf rolls up into the header. `biparting`: two panels

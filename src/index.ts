@@ -19,15 +19,17 @@ export * from "./core/screenSize";
 export * from "./core/terminals";
 export * from "./core/useCanvasTexture";
 
-// Doors: data, leaves, walk-up triggers, collision, signs
+// Doors: data, steel and plain doors, walk-up triggers, collision, signs
 export * from "./doors/DoorFrame";
 export * from "./doors/DoorLeaf";
 export * from "./doors/DoorMetal";
 export * from "./doors/DoorSign";
 export * from "./doors/Doors";
+export * from "./doors/PlainDoorLeaf";
 export * from "./doors/SlidingDoor";
 export * from "./doors/door";
 export * from "./doors/doorMetal";
+export * from "./doors/doorStyle";
 
 // Walk mode: capsule physics and stance
 export * from "./walk/WalkPhysics";

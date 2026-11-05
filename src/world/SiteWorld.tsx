@@ -5,7 +5,7 @@
 //
 //   rooms     SiteRoom modules (core/room.ts) — each draws itself, owns its
 //             terminals, and may add solids to the walk octree.
-//   doors     SiteDoor list (doors/door.ts).
+//   doors     SiteDoor list (doors/door.ts), drawn steel or plain (doorStyle).
 //   children  The scene itself — floor, walls, props — drawn inside the canvas.
 //   solids    Static walk solids (the floor and walls, as invisible boxes).
 //   overlay   DOM beside the canvas, e.g. a host's own console screen.
@@ -21,6 +21,7 @@ import { DoorSigns } from "../doors/DoorSign";
 import { DoorLighting } from "../doors/DoorMetal";
 import { SiteDoorLeaves, SiteDoorTriggers, useDoorsOpen } from "../doors/Doors";
 import type { SiteDoor } from "../doors/door";
+import { DEFAULT_DOOR_STYLE, doorsNeedLighting, type DoorStyle } from "../doors/doorStyle";
 import { DoomRig } from "../doom/Doom";
 import { DoomHud } from "../doom/DoomHud";
 import type { SwitchAt } from "../doom/DemonSwitch";
@@ -48,6 +49,11 @@ export interface SiteWorldProps {
   camera: SiteCamera;
   rooms: readonly SiteRoom[];
   doors?: readonly SiteDoor[];
+  /** How the doors look: `"steel"` (the default) is brushed-metal leaves and frames
+   * with textures and a lit environment; `"plain"` is a flat slab, no frame, in the
+   * scene's own unlit material, with no textures and no door lighting, which is
+   * lighter to draw. Opening, walk-up triggers and collision are the same in both. */
+  doorStyle?: DoorStyle;
   doorSigns?: readonly DoorSignSpec[];
   /** Static walk solids and round solids (columns); rooms add their own. */
   solids?: ReactNode;
@@ -113,7 +119,8 @@ const NONE: readonly never[] = [];
 
 /** The whole viewport: canvas, orbit/walk cameras, doors, rooms, terminals and their DOM screens. */
 export function SiteWorld({
-  mode, reduce, camera, rooms, doors = NONE, doorSigns, solids, cylinders = NONE, checkpoint, doomSwitchAt,
+  mode, reduce, camera, rooms, doors = NONE, doorStyle = DEFAULT_DOOR_STYLE, doorSigns, solids, cylinders = NONE, checkpoint,
+  doomSwitchAt,
   onOpenPage, cameraRef, consoleId = null, onConsoleExit, hostGoal = null, walkTo = null, hostPrompt = null, walkHint,
   children, overlay, background = INK,
 }: SiteWorldProps) {
@@ -177,9 +184,9 @@ export function SiteWorld({
         >
           <CameraTracker into={cameraRef} />
           <CameraRig mode={mode} camera={camera} />
-          {doors.length > 0 && <DoorLighting />}
+          {doorsNeedLighting(doorStyle, doors.length) && <DoorLighting />}
           {doorSigns && <DoorSigns signs={doorSigns} />}
-          <SiteDoorLeaves doors={doors} open={doorsOpen} />
+          <SiteDoorLeaves doors={doors} open={doorsOpen} doorStyle={doorStyle} />
           {children}
           {rooms.map((room, i) => (
             <room.Scene key={room.id} model={models[i]} env={env} />

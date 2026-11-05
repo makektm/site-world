@@ -44,7 +44,7 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `CRITICAL` | const |  |
 | `PHOS` | const | The console's phosphor — a material, like console.css's --phos, never a status colour. |
 | `PHOS_HI` | const |  |
-| `WALL_FILL` | const | Wall fill: opaque, but deliberately dark — near INK, not PAPER — so a door (solid PAPER, see SlidingDoor.tsx's DoorFace: "a door has to read as an actual barrier") still reads as visually distinct from the wall around it. |
+| `WALL_FILL` | const | Wall fill: opaque, but deliberately dark — near INK, not PAPER — so a plain door (a solid PAPER slab, no frame, see PlainDoorLeaf.tsx: "a door has to read as an actual barrier") still reads as visually distinct from the wall around it. |
 | `WALL` | const |  |
 | `COLLIDER_WALL_T` | const | Size each doorway to exactly the width of the room it leads to. |
 | `WALL_FACE` | const | From that centre-line to the wall's visible face on either side. |
@@ -172,10 +172,17 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `SiteDoorTriggers` | function |  |
 | `DoorColliders` | function | The doors' own collider boxes — deliberately never joined into the static walk colliders. |
 
+### `doors/PlainDoorLeaf`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `PlainDoorLeaf` | function | The plain door: one flat PAPER slab with an outline, no frame, drawn into its parent mesh. |
+
 ### `doors/SlidingDoor`
 
 | Export | Kind | What |
 | --- | --- | --- |
+| `doorParts` | function | The components a door style draws with: steel is a frame and a leaf, plain is a flat leaf and no frame (`Frame` is null). |
 | `SlidingDoor` | function | The visual leaf: `axis` is which way the doorway gap runs — "x" for a doorway in a north/south wall, "z" for one in an east/west wall. |
 | `BiPartingDoor` | function | A center-opening pair for a wide doorway: two panels, each `halfWidth` wide (not `halfWidth * 2` — together they cover the same full gap the single-leaf SlidingDoor above spans), meeting at `center` when closed and retracting outward along `axis` when open. |
 
@@ -201,6 +208,14 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `drawDoorMetal` | function | Paints brushed steel for a leaf or frame `width` metres wide: a vertical sheen and long, faint horizontal strokes. |
 | `drawHazard` | function | Diagonal hazard stripes, `w` x `h` texels, one stripe pair per `period` texels: warning amber on ink, the marking on a jamb's edge. |
 | `drawIdPlate` | function | A stencilled door ID plate: the code on ink, in a ruled box. |
+
+### `doors/doorStyle`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `DoorStyle` | type | The door look a host picks with `<SiteWorld doorStyle>`. |
+| `DEFAULT_DOOR_STYLE` | const | The look a world gets when its host does not say. |
+| `doorsNeedLighting` | function | Whether a world's doors need DoorLighting. |
 
 ## walk/
 

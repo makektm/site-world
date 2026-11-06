@@ -44,7 +44,7 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `CRITICAL` | const |  |
 | `PHOS` | const | The console's phosphor — a material, like console.css's --phos, never a status colour. |
 | `PHOS_HI` | const |  |
-| `WALL_FILL` | const | Wall fill: opaque, but deliberately dark — near INK, not PAPER — so a door (solid PAPER, see SlidingDoor.tsx's DoorFace: "a door has to read as an actual barrier") still reads as visually distinct from the wall around it. |
+| `WALL_FILL` | const | Wall fill: opaque, but deliberately dark — near INK, not PAPER — so a plain door (a solid PAPER slab, no frame, see PlainDoorLeaf.tsx: "a door has to read as an actual barrier") still reads as visually distinct from the wall around it. |
 | `WALL` | const |  |
 | `COLLIDER_WALL_T` | const | Size each doorway to exactly the width of the room it leads to. |
 | `WALL_FACE` | const | From that centre-line to the wall's visible face on either side. |
@@ -172,10 +172,17 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `SiteDoorTriggers` | function |  |
 | `DoorColliders` | function | The doors' own collider boxes — deliberately never joined into the static walk colliders. |
 
+### `doors/PlainDoorLeaf`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `PlainDoorLeaf` | function | The plain door: one flat PAPER slab with an outline, no frame, drawn into its parent mesh. |
+
 ### `doors/SlidingDoor`
 
 | Export | Kind | What |
 | --- | --- | --- |
+| `doorParts` | function | The components a door style draws with: steel is a frame and a leaf, plain is a flat leaf and no frame (`Frame` is null). |
 | `SlidingDoor` | function | The visual leaf: `axis` is which way the doorway gap runs — "x" for a doorway in a north/south wall, "z" for one in an east/west wall. |
 | `BiPartingDoor` | function | A center-opening pair for a wide doorway: two panels, each `halfWidth` wide (not `halfWidth * 2` — together they cover the same full gap the single-leaf SlidingDoor above spans), meeting at `center` when closed and retracting outward along `axis` when open. |
 
@@ -202,6 +209,14 @@ Everything below is exported from `site-world`. One line each; read the source f
 | `drawHazard` | function | Diagonal hazard stripes, `w` x `h` texels, one stripe pair per `period` texels: warning amber on ink, the marking on a jamb's edge. |
 | `drawIdPlate` | function | A stencilled door ID plate: the code on ink, in a ruled box. |
 
+### `doors/doorStyle`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `DoorStyle` | type | The door look a host picks with `<SiteWorld doorStyle>`. |
+| `DEFAULT_DOOR_STYLE` | const | The look a world gets when its host does not say. |
+| `doorsNeedLighting` | function | Whether a world's doors need DoorLighting. |
+
 ## walk/
 
 ### `walk/WalkPhysics`
@@ -210,6 +225,7 @@ Everything below is exported from `site-world`. One line each; read the source f
 | --- | --- | --- |
 | `RoundSolid` | interface | A round solid the walker cannot enter (a machine column, say). |
 | `WalkColliders` | function | The static walk-mode proxies: `cylinders` and whatever solids the world and its rooms hand in. |
+| `WalkTo` | interface | A host's request to put the walker somewhere: stand at `at` ([x, z]) and face `lookAt`. |
 | `WalkRig` | function |  |
 
 ### `walk/walkStance`
@@ -526,3 +542,405 @@ Everything below is exported from `site-world`. One line each; read the source f
 | --- | --- | --- |
 | `RoomBounds` | interface |  |
 | `roomDoomConfig` | function | Demons walk `bounds` and are stopped by `walls`; they rise from eight points just inside the room (corners and wall midpoints). |
+
+## layout/
+
+### `layout/catalogLayout`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `CatalogDomain` | interface | A domain: one room in the plan. |
+| `CatalogService` | interface | A service: one slot in its domain's room. |
+| `Catalog` | interface | What `layoutCatalog` plans from. |
+| `FloorRect` | interface | An axis-aligned floor rectangle, the same shape as a host's BOUNDS (and GridFloor / FloorSolid props). |
+| `WingSpec` | interface | A named area the host reserves beside the buildings (a factory hall, a loading dock): placed, never walled. |
+| `CatalogLayoutOptions` | interface | Tuning for `layoutCatalog`; every field has a default. |
+| `LayoutRoom` | interface | One domain's room. |
+| `ServiceSlot` | interface | Where one service stands. |
+| `DoorLink` | interface | Which two rooms a door joins: `a` on its -x/-z side, `b` on its +x/+z side (OUTSIDE for an entrance). |
+| `LayoutBuilding` | interface |  |
+| `LayoutWing` | interface |  |
+| `CatalogPlan` | interface | Everything `layoutCatalog` returns: pass walls/doors/doorSigns/camera to SiteWorld, bounds to the floor. |
+| `OUTSIDE` | const | The room id on the far side of an entrance. |
+| `UNASSIGNED_DOMAIN` | const | The room services whose domain is not in the catalog end up in. |
+| `layoutCatalog` | function | Plans a building (or a campus of them) from a catalog: deterministic, overlap-free, every room reachable by doors. |
+
+### `layout/lod`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `Lod` | type | "detail": everything. |
+| `LodThresholds` | interface | Floor distances (metres) under which a thing is drawn at "detail", then "room". |
+| `LOD_THRESHOLDS` | const | About one large room across for detail (labels stay readable), two or three for room blocks. |
+| `lodFor` | function | The level for a floor distance; pass the level it has now to keep it from flickering at a threshold. |
+| `distanceToRect` | function | Floor distance from a point to the nearest edge of a rect; 0 inside it. |
+| `lodForRect` | function | `lodFor` the distance from a viewer's floor position (or a camera's 3D one, height included) to a room. |
+
+### `layout/planGraph`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `roomAt` | function | The room whose floor contains [x, z] (wall centre-lines count as inside the first room listed), or null. |
+| `roomNeighbours` | function | Room id -> the rooms one door away (OUTSIDE included when there are entrances), each list in door order. |
+| `reachableRooms` | function | Every room id (and OUTSIDE, if reachable) a walker starting in `from` can get to through doors. |
+| `doorPath` | function | The fewest-doors walk from one room to another, as the doors to pass in order; [] if already there, null if none. |
+
+## kit/
+
+### `kit/AgentFigure`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `AgentBadge` | type | The glyph a blocked figure floats over its head. |
+| `AgentFigureProps` | interface | Props for {@link AgentFigure}. |
+| `AgentFigure` | function | One AI agent session as a small hovering drone with a state-coloured visor and a floating name tag. |
+
+### `kit/AgentTrail`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `AgentTrail` | function | A fading line of the recent path of `target`, drawn on the floor in the parent's space. |
+
+### `kit/NameTag`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `NameTag` | function | Floating, camera-facing text tag on a canvas texture; anchored at its bottom centre. |
+
+### `kit/PresenceMarker`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `PresenceMarkerProps` | interface | Props for {@link PresenceMarker}. |
+| `PresenceMarker` | function | A human teammate's presence: a standing silhouette on a ring in their colour, with their name. |
+
+### `kit/agentPath`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `PathPoint` | type | A point on the floor, [x, z] in metres. |
+| `AGENT_WALK_SPEED` | const | A human walking pace, m/s; what a figure on a path moves at unless told otherwise. |
+| `PathSample` | interface | One reading of a walk along a path. |
+| `floorHeading` | function | The heading (rotation about y) that turns +z toward `to` from `from`; 0 when the two coincide. |
+| `pathLength` | function | Total length of the path in metres; `loop` adds the leg from the last point back to the first. |
+| `samplePath` | function | The point `distance` metres along the path. |
+| `PreparedPath` | interface | A path's real legs and their lengths, worked out once, for a caller that samples the same path every frame (a walking figure) and must not allocate. |
+| `preparePath` | function | Prepares `points` for `samplePathInto`. |
+| `samplePathInto` | function | `samplePath` over a prepared path, written into `out`. |
+| `walkPath` | function | Where a walker is `elapsed` seconds after setting off along the path at `speed` m/s. |
+
+### `kit/agentState`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `AgentState` | type | The life of one agent session as the figure shows it. |
+| `AGENT_STATES` | const | Every state, in the order a legend lists them. |
+| `AGENT_STATE_COLOR` | const | The palette colour each state is drawn in. |
+| `AGENT_STATE_LABEL` | const | A short human word for each state, for tags and legends. |
+| `agentGlow` | function | The visor's brightness, 0..1, for `state` at time `t` seconds. |
+| `agentBob` | function | How high the figure hovers above its rest height, metres: a bob for idle and walking, nothing with `reduce`. |
+
+### `kit/crowdLayout`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `CrowdMember` | interface | One figure to place: a stable id and the spot it wants. |
+| `CrowdOptions` | interface | How close counts as "the same spot", and how far apart to spread. |
+| `crowdLayout` | function | Where each member should stand, by id: unchanged when alone, spread on rings when sharing a spot. |
+| `fanOut` | function | Offsets [dx, dz] for `n` figures round a centre, every pair at least `spacing` apart. |
+| `useCrowdLayout` | function | `crowdLayout`, memoised on the members' ids and spots rather than on the array's identity. |
+
+### `kit/Conveyor`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `ConveyorProps` | interface |  |
+| `Conveyor` | function | A conveyor belt along a straight or polyline path, its surface sliding downstream. |
+
+### `kit/Crate`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `CRATE_COLOR` | const | Edge colour per work status. |
+| `CrateProps` | interface |  |
+| `Crate` | function | One unit of work as a box coloured by its status, with an optional lid tag. |
+
+### `kit/Station`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `STATION_COLOR` | const | Status-light colour per station status. |
+| `StationProps` | interface |  |
+| `Station` | function | A gate on a belt with a stage label, a waiting-count and a status light. |
+
+### `kit/WorkLine`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `WorkStation` | interface | One stage of a work line. |
+| `WorkLineProps` | interface |  |
+| `WorkLine` | function | A belt with stations; work items pile up at their stage, fail into a bin, and fly off when deployed. |
+
+### `kit/workLineLayout`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `FloorPoint` | type | A floor point [x, z]. |
+| `WorkStatus` | type | Where a unit of work is in its life. |
+| `WorkItem` | interface | One unit of work on a line: a ticket, a PR. |
+| `LineSample` | interface | A sample of a belt: its point, and the rotation about y that turns local +z downstream (so local +x points across the belt, to the left of someone facing downstream). |
+| `polylineLength` | function | Total length of a polyline, metres. |
+| `sampleLine` | function | The point `s` metres along `path`, with its heading. |
+| `sampleLineInto` | function | `sampleLine` written into `out`, for a per-frame caller that must not allocate (every crate on a belt samples it every frame). |
+| `offsetAcross` | function | Moves a sample `side` metres across the belt, along its local +x. |
+| `nearestAlong` | function | The distance along `path` of the point on it nearest [x, z]. |
+| `stationAlong` | function | Each station's distance along a belt of `length`: its own `at` (a 0..1 fraction) where given, else evenly spaced with room before the first for its pile and room after the last for finished work to leave. |
+| `PileOptions` | interface |  |
+| `PileSlot` | interface |  |
+| `pileSlot` | function | Where the `index`th crate (0 = first in line) of a pile sits. |
+| `pileRows` | function | How many rows of `pitch` fit in `room` metres; at least one, so a station crowded by its neighbour still has somewhere to stack. |
+| `StationStatus` | type | Station light: from its queue unless the host says otherwise. |
+| `queueStatus` | function | The default light for a queue of `count`: busy is fine, a backlog warns, a heap is critical. |
+| `WorkLineGeometry` | interface |  |
+| `Placement` | type | Where a crate is headed. |
+| `WorkLineLayout` | interface |  |
+| `layoutWorkLine` | function | Places every item. |
+
+### `kit/FloorHeat`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `FloorHeatProps` | interface |  |
+| `FloorHeat` | function | A floor overlay heat map built from {x, z, value} points. |
+
+### `kit/LoadingDock`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `DockBay` | interface |  |
+| `LoadingDockProps` | interface |  |
+| `DOCK_BAY_GAP` | const | Metres between bays. |
+| `LoadingDock` | function | A platform of bays for external dependencies, each with crates, a status light and a latency/error badge. |
+
+### `kit/Meter`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `MeterProps` | interface |  |
+| `Meter` | function | A cost/spend gauge — dial or bar column — with label, value and an optional budget line. |
+
+### `kit/Padlock`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `PadlockProps` | interface |  |
+| `Padlock` | function | A padlock to hang on anything restricted. |
+| `KeyBadgeProps` | interface |  |
+| `KeyBadge` | function | A small floating key, to attach to an agent that holds a secret. |
+
+### `kit/QueuePipe`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `QueuePipeProps` | interface |  |
+| `QueuePipe` | function | A pipe between two points whose packets show a queue's backlog and throughput. |
+
+### `kit/StickyNote`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `NoteAuthorKind` | type |  |
+| `NOTE_PAPER` | const | Paper tints rather than the status colours themselves: a note is a thing, not an alert, and INK text must stay readable on it. |
+| `NOTE_ACCENT` | const | The stripe and author colour on each kind of note. |
+| `StickyNoteProps` | interface |  |
+| `StickyNote` | function | A paper note with short text and an author, tinted by human vs agent. |
+
+### `kit/Tank`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `TankProps` | interface |  |
+| `Tank` | function | A storage tank: glass shell, coloured liquid at `fill`, optional growth ripple and label. |
+
+### `kit/infraMath`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `InfraHealth` | type | The three states every infra prop colours by. |
+| `INFRA_HEALTH_COLOR` | const | Health -> palette colour, the same mapping the company example's pylons use. |
+| `QueuePacking` | interface |  |
+| `queuePacking` | function | Backlog -> how a QueuePipe packs its packets. |
+| `packetT` | function | Where packet `i` of `count` sits along the pipe, 0 at the inlet and 1 at the outlet, at `phase` laps. |
+| `packetSpacing` | function | All packet positions at once; see packetT. |
+| `packetSpeed` | function | Throughput (messages/s) -> laps of the pipe per second, on a log scale: about one lap every 6s at 1/s and every 2s at 1000/s. |
+| `unitFill` | function | Any fill, ratio or level clamped into 0..1 (NaN reads as empty). |
+| `BudgetState` | type |  |
+| `budgetState` | function | Spend against a budget: warn from `warnAt` of it (default 80%), over past it. |
+| `BUDGET_COLOR` | const | BudgetState -> palette colour. |
+| `dialAngle` | function | A dial's needle angle for `value` of `max`, sweeping `sweep` radians clockwise from the left (−sweep/2 is the zero mark, +sweep/2 is full). |
+| `compactNumber` | function | Short human figure: 950, 1.2k, 34k, 1.5M. |
+| `bayOffsets` | function | Centres (along the dock's local x) of `count` bays `bayWidth` wide with `gap` between them, the row centred on 0. |
+| `bayRowWidth` | function | Total width of that row of bays, for sizing the platform under it. |
+| `HeatPoint` | interface |  |
+| `HeatBounds` | interface |  |
+| `HeatGrid` | interface |  |
+| `heatBounds` | function | The smallest rectangle round every point, grown by `pad` metres on each side. |
+| `heatGrid` | function | Splats each point as a gaussian of `radius` metres (the falloff's 1-sigma) onto a grid of `cellSize`-metre cells covering `bounds`, and normalises to 0..1 against the hottest cell or `fixedMax`. |
+| `heatColor` | function | 0..1 -> [r, g, b, a] bytes on the heat ramp; alpha rises with heat so the cold edge of the overlay fades into the floor rather than ending in a square. |
+| `wrapLines` | function | Greedy word wrap against any width measure (a canvas's measureText in the scene, a character count in tests). |
+
+### `kit/infraPaint`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `infraFont` | function | The mono stack every painted surface in the world uses. |
+| `useInfraPaint` | function | A `width` x `height` px canvas texture painted by `paint` whenever `deps` change, and once more when document fonts are ready — a canvas asked for 'IBM Plex Mono' before it loads silently draws the fallback. |
+| `InfraLabelProps` | interface |  |
+| `InfraLabel` | function | A one- or two-line name plate: a title in PAPER and an optional status line. |
+
+### `kit/GoToPalette`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `GoToTarget` | interface | Somewhere the palette can go. |
+| `GoToPaletteProps` | interface |  |
+| `GoToPalette` | function | A fuzzy go-to search over host targets; Enter calls `onGo`. |
+
+### `kit/InspectPanel`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `InspectTone` | type | How a value reads: the palette's status colours, or dimmed. |
+| `InspectField` | interface | One label/value row. |
+| `InspectSection` | interface | A titled block: rows, free content, or both (rows first). |
+| `InspectAction` | interface | A button along the panel's foot ("open runbook", "page owner"). |
+| `InspectPanelProps` | interface |  |
+| `InspectPanel` | function | A DOM side panel for the current selection, with a close button and Esc. |
+
+### `kit/LayerBar`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `LayerBarProps` | interface |  |
+| `LayerBar` | function | DOM chips for `useLayers`' state, with keyboard shortcuts 1..9. |
+
+### `kit/Selectable`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `SelectableProps` | interface |  |
+| `Selectable` | function | Wraps 3D children so they can be hovered and selected (orbit pointer, or the walk crosshair via <SelectionCrosshair>). |
+| `SelectionCrosshairProps` | interface |  |
+| `SelectionCrosshair` | function | Walk-mode picking: hovers the nearest <Selectable> under the screen centre within `reach` (walls in front of it block the ray), and selects it on E or a locked-pointer click. |
+
+### `kit/TimelineScrubber`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `TimelineEvent` | interface | Something that happened at `t` (epoch ms), drawn as a dot on the track. |
+| `TimelineSpeed` | interface | A playback rate (history ms per real ms) and what to call it. |
+| `DEFAULT_SPEEDS` | const | Real time up to an hour of history a second: factory history is hours to days long, and 1x alone would never get anywhere. |
+| `TimelineScrubberProps` | interface |  |
+| `TimelineScrubber` | function | DOM scrubber for `useTimeline`: range, play/pause, speed, LIVE, event markers. |
+
+### `kit/TourCaption`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `TourCaptionProps` | interface |  |
+| `TourCaption` | function | The DOM caption card for `useTour`; renders nothing when no tour runs. |
+
+### `kit/blastRadius`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `BlastEdge` | type | A directed edge, `from` -> `to` (e.g. |
+| `BlastDirection` | type | Which way to walk: `out` follows from->to, `in` walks back to->from (for call edges, "who breaks if this fails"), `both` ignores direction. |
+| `BlastHit` | interface | One reached node: hops from the nearest start, and the node it was reached from (null for a start). |
+| `blastRadius` | function | Every node reachable from `start` (one id or several) along `edges`, with its hop depth, in breadth-first order (starts first, at depth 0). |
+| `blastDepths` | function | The same result as a lookup, id -> depth, for colouring nodes. |
+| `blastPaths` | function | The edges of the shortest-path tree `hits` describes, as [via, id] pairs — the arcs a host lights to show how the blast travelled. |
+
+### `kit/fuzzy`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `fuzzyScore` | function | A score for `query` against `text` (higher is better), or null when the query's characters do not all appear in order. |
+| `Searchable` | interface | Anything the palette can search: a label, and optional extra words. |
+| `fuzzySearch` | function | `items` ranked by their best field match, best first; all of them, in their own order, for an empty query. |
+
+### `kit/goal`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `CameraGoal` | interface | What SiteWorld's `hostGoal` takes: the orbit camera's position and target. |
+| `Point3` | type |  |
+| `GoalOptions` | interface |  |
+| `goalFor` | function | A pleasing orbit-camera goal looking at `point`. |
+| `goalShifted` | function | The same goal moved so its target sits on `point`, the camera keeping its offset — how a follow tracks a mover without swinging. |
+| `goalNeedsMove` | function | True when `point` has moved at least `minMove` metres from where `goal` looks: SiteWorld restarts a whole eased flight on every new goal, so a follower should only issue one when the mover has really gone somewhere. |
+| `standFor` | function | Where a walker should stand to face `point`: `distance` metres out on the side `from` is on (else +z), looking at it at eye height. |
+
+### `kit/layers`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `LayerDef` | interface | One layer the host offers. |
+| `LayerState` | type | Which layers are on, by id. |
+| `initialLayers` | function | The starting state: each layer's `defaultOn`, with at most one per group (the first that asks). |
+| `setLayerOn` | function | `state` with layer `id` set to `on`. |
+| `toggleLayer` | function | `state` with layer `id` flipped. |
+| `soloLayer` | function | `state` with only layer `id` on (or everything off, if it was already the only one). |
+| `LayersApi` | interface | What `useLayers` returns. |
+| `useLayers` | function | Toggle state for `defs`. |
+
+### `kit/selection`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `SelectionRef` | interface | One thing in the world a person can pick: what sort it is, and which. |
+| `SelectionState` | interface | The store's whole state. |
+| `SelectionStore` | interface | A selection store: read, write, subscribe. |
+| `sameRef` | function | True when both are null or both name the same thing. |
+| `createSelectionStore` | function | A fresh store, outside React; `useSelectionStore` makes one per component. |
+| `useSelectionStore` | function | One store for the life of the calling component. |
+| `SelectionApi` | interface | What `useSelection` returns: the state, plus the store's writers bound. |
+| `useSelection` | function | Subscribe to a selection store from either React tree. |
+| `selectionPrompt` | function | The walk-mode "[E] …" text for whatever the crosshair is on, for SiteWorld's `hostPrompt`; null when it is on nothing (or on the thing already selected, which E would not change). |
+
+### `kit/timeline`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `TimelineState` | interface | The playhead's state. |
+| `TimelineAction` | type |  |
+| `timelineReduce` | function | The next state for `action`, within [start, end]. |
+| `playheadAt` | function | Where the playhead is: `end` while live. |
+| `TimelineOptions` | interface |  |
+| `TimelineApi` | interface | What `useTimeline` returns. |
+| `useTimeline` | function | A playhead over [start, end]; the host may move both (a sliding window). |
+
+### `kit/tour`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `TourStop` | interface | One stop: either an explicit `goal`, or a point `at` framed by goalFor. |
+| `TourPosition` | interface | A tour's position: `index` is null when no tour is running. |
+| `TourAction` | type |  |
+| `tourStep` | function | The next position for `action` over `count` stops. |
+| `TourApi` | interface | What `useTour` returns. |
+| `useTour` | function | Step through `stops`. |
+
+### `kit/useFollow`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `FollowOptions` | interface |  |
+| `useFollow` | function | A goal for SiteWorld's `hostGoal` that tracks `getPoint()` while `active` (null when not active or the mover is gone). |
+
+### `kit/useKeydown`
+
+| Export | Kind | What |
+| --- | --- | --- |
+| `useKeydown` | function | Calls `handler` for every window keydown while `enabled`. |
+| `hasCommandModifier` | function | True for a key with Ctrl, Alt or Meta held — the browser's or the OS's, not the world's. |

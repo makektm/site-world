@@ -5,7 +5,7 @@
 //
 //   rooms     SiteRoom modules (core/room.ts) — each draws itself, owns its
 //             terminals, and may add solids to the walk octree.
-//   doors     SiteDoor list (doors/door.ts).
+//   doors     SiteDoor list (doors/door.ts), drawn steel or plain (doorStyle).
 //   children  The scene itself — floor, walls, props — drawn inside the canvas.
 //   solids    Static walk solids (the floor and walls, as invisible boxes).
 //   overlay   DOM beside the canvas, e.g. a host's own console screen.
@@ -21,12 +21,13 @@ import { DoorSigns } from "../doors/DoorSign";
 import { DoorLighting } from "../doors/DoorMetal";
 import { SiteDoorLeaves, SiteDoorTriggers, useDoorsOpen } from "../doors/Doors";
 import type { SiteDoor } from "../doors/door";
+import { DEFAULT_DOOR_STYLE, doorsNeedLighting, type DoorStyle } from "../doors/doorStyle";
 import { DoomRig } from "../doom/Doom";
 import { DoomHud } from "../doom/DoomHud";
 import type { SwitchAt } from "../doom/DemonSwitch";
 import { FlyRig, OrbitNudge } from "../screens/ConsoleRig";
 import { UsePrompt } from "../screens/UsePrompt";
-import { WalkRig, type RoundSolid } from "../walk/WalkPhysics";
+import { WalkRig, type RoundSolid, type WalkTo } from "../walk/WalkPhysics";
 import { EYE, INK, SCREEN_Y, VIEW_DIST, type DoorSignSpec } from "../core/engine";
 import { useRoomModels, type RoomEnv, type SiteRoom } from "../core/room";
 import { useTerminals } from "../core/terminals";
@@ -48,6 +49,11 @@ export interface SiteWorldProps {
   camera: SiteCamera;
   rooms: readonly SiteRoom[];
   doors?: readonly SiteDoor[];
+  /** How the doors look: `"steel"` (the default) is brushed-metal leaves and frames
+   * with textures and a lit environment; `"plain"` is a flat slab, no frame, in the
+   * scene's own unlit material, with no textures and no door lighting, which is
+   * lighter to draw. Opening, walk-up triggers and collision are the same in both. */
+  doorStyle?: DoorStyle;
   doorSigns?: readonly DoorSignSpec[];
   /** Static walk solids and round solids (columns); rooms add their own. */
   solids?: ReactNode;
@@ -67,6 +73,8 @@ export interface SiteWorldProps {
   /** An orbit fly-in the host wants (a machine console), alongside the
    * terminals' own. */
   hostGoal?: { pos: Vector3; target: Vector3 } | null;
+  /** Walk mode: put the walker at a spot (a go-to). A new `seq` replants. */
+  walkTo?: WalkTo | null;
   /** The host's own "[E]" prompt, shown after the demon switch's and before
    * the rooms'. */
   hostPrompt?: string | null;
@@ -111,8 +119,9 @@ const NONE: readonly never[] = [];
 
 /** The whole viewport: canvas, orbit/walk cameras, doors, rooms, terminals and their DOM screens. */
 export function SiteWorld({
-  mode, reduce, camera, rooms, doors = NONE, doorSigns, solids, cylinders = NONE, checkpoint, doomSwitchAt,
-  onOpenPage, cameraRef, consoleId = null, onConsoleExit, hostGoal = null, hostPrompt = null, walkHint,
+  mode, reduce, camera, rooms, doors = NONE, doorStyle = DEFAULT_DOOR_STYLE, doorSigns, solids, cylinders = NONE, checkpoint,
+  doomSwitchAt,
+  onOpenPage, cameraRef, consoleId = null, onConsoleExit, hostGoal = null, walkTo = null, hostPrompt = null, walkHint,
   children, overlay, background = INK,
 }: SiteWorldProps) {
   const [doorsOpen, setDoorOpen] = useDoorsOpen(doors);
@@ -175,9 +184,9 @@ export function SiteWorld({
         >
           <CameraTracker into={cameraRef} />
           <CameraRig mode={mode} camera={camera} />
-          {doors.length > 0 && <DoorLighting />}
+          {doorsNeedLighting(doorStyle, doors.length) && <DoorLighting />}
           {doorSigns && <DoorSigns signs={doorSigns} />}
-          <SiteDoorLeaves doors={doors} open={doorsOpen} />
+          <SiteDoorLeaves doors={doors} open={doorsOpen} doorStyle={doorStyle} />
           {children}
           {rooms.map((room, i) => (
             <room.Scene key={room.id} model={models[i]} env={env} />
@@ -205,6 +214,7 @@ export function SiteWorld({
             doorsOpen={doorsOpen}
             solids={allSolids}
             checkpoint={checkpoint}
+            walkTo={walkTo}
           />
         </Canvas>
         {mode === "walk" && (

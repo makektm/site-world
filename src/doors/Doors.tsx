@@ -7,6 +7,7 @@ import type { Group } from "three";
 import { PointProximity } from "../core/PointProximity";
 import { BiPartingDoor, SlidingDoor } from "./SlidingDoor";
 import { allClosed, type DoorsOpen, type SiteDoor } from "./door";
+import { DEFAULT_DOOR_STYLE, type DoorStyle } from "./doorStyle";
 import { COLLIDER_WALL_T, DOOR_H } from "../core/engine";
 
 /** Open/closed per door, all closed. Each door's own PointProximity resets to
@@ -22,12 +23,18 @@ export function useDoorsOpen(doors: readonly SiteDoor[]): [DoorsOpen, (id: strin
   return [open, setOpen];
 }
 
-export function SiteDoorLeaves({ doors, open }: { doors: readonly SiteDoor[]; open: DoorsOpen }) {
+export function SiteDoorLeaves({
+  doors, open, doorStyle = DEFAULT_DOOR_STYLE,
+}: {
+  doors: readonly SiteDoor[];
+  open: DoorsOpen;
+  doorStyle?: DoorStyle;
+}) {
   return (
     <>
       {doors.map(({ id, code, doorway, kind }) => {
         const Leaf = kind === "biparting" ? BiPartingDoor : SlidingDoor;
-        return <Leaf key={id} {...doorway} code={code} open={open[id] ?? false} />;
+        return <Leaf key={id} {...doorway} code={code} open={open[id] ?? false} doorStyle={doorStyle} />;
       })}
     </>
   );

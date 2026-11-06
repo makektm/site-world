@@ -5,13 +5,46 @@ Draw your data as a *place*: rooms with boards on the walls, sliding doors, term
 and press **E** at, an orbit camera for looking around and a first-person walk mode for being in it.
 It started as the live "SITE" view of an engineering dashboard and was lifted out as a library.
 
-![A company's ten microservices as a building: four rooms (EDGE, COMMERCE, PAYMENTS, PLATFORM), a pylon per service with its replicas orbiting it, live dashboards on the walls, and the calls between services as glowing arcs overhead](media/overview.png)
+![A software factory as a building: six rooms (EDGE, COMMERCE, PAYMENTS, PLATFORM, GROWTH, DATA), a pylon per service, databases as tanks, agents at work, and the calls between services as glowing arcs overhead](media/overview.png)
 
-| Walk in: the PAYMENTS room mid-incident | The on-call console, powered |
+## What you can see
+
+- **Agents at work.** Each AI coding session is a small drone that walks to the service it is changing.
+  Its visor shows what it is doing; a "?" means it is stuck waiting on someone.
+- **The factory floor.** Work moves along a conveyor: ticket, agent, PR, CI, review, deploy. Failed CI
+  drops into a reject bin. PRs waiting for a human pile up at review, so a slow review is easy to spot.
+- **Sprawl.** Services nothing calls, look-alike duplicates, services with no team owner, who made each
+  one (a person or an agent) and how old it is.
+- **What services lean on.** Databases as tanks, queues as pipes with their backlog, third parties at
+  the loading dock, cost per room, and padlocks on secrets.
+- **Blast radius.** Select a service and see what breaks if it fails.
+
+Everything on (`?layers=all`): cost heat on the floor, ownership and age rings, look-alike and orphan
+markers, and notes.
+
+![The same building with every layer on: cost heat on the floors, ownership and age rings, links between look-alike services, and sticky notes](media/overview-full.png)
+
+## What you can do
+
+- **Inspect** anything: click it (or press **E** in walk mode) for a panel with its details.
+- **Layers**: turn traffic, agents, cost, ownership, age, blast radius and more on and off, from the
+  **layers** button or keys **1–9**. The first view is kept calm; open the demo with `?layers=all` to see
+  everything at once.
+- **Go to and follow**: press **/** and type a name to fly there; follow an agent as it works.
+- **Timeline**: scrub back through six months and watch the building grow.
+- **Tours**: a guided walk through a story, such as "why is checkout slow?".
+- **Act from a terminal**: the on-call console has a few safe buttons (pause an agent, approve a PR,
+  roll back), and every run is logged.
+
+| The factory hall and its review pile | A selected service and its blast radius |
 | --- | --- |
-| ![First person in the PAYMENTS room: an orange (degraded) beacon on the payments pylon and its wall dashboard showing a dead replica, 455ms p99 and 4.3% errors](media/walk.png) | ![The on-call terminal: every service with its traffic, latency and health, and runbook buttons for the two that need attention](media/terminal.png) |
+| ![The factory hall from above: belts from ticket to deploy, stations with their counts, a red reject bin and a pile of orange PRs waiting at review](media/factory.png) | ![The orders service selected: corner brackets round its pylon, an "if orders fails, 2 services break" banner, and the inspect panel with its health, owner, origin, calls and what it leans on](media/inspect.png) |
 
-<sub>All from `examples/company`, a fictional company running ten microservices. Regenerate with `bun run screenshot`.</sub>
+| Walk in: first person at the COMMERCE door | The on-call console, powered |
+| --- | --- |
+| ![First person outside the COMMERCE room: its banner over the door, a database tank and pylons either side, and a look-alike duplicate flagged on the floor](media/walk.png) | ![The on-call terminal: every service with its traffic, latency and health, three restricted macros and runbook buttons](media/terminal.png) |
+
+<sub>All from `examples/company`, a fictional company whose services are mostly made by agents. Regenerate with `bun run screenshot`.</sub>
 
 ## Why
 
@@ -63,18 +96,19 @@ Needs [Bun](https://bun.sh) and Node 22+.
 git clone https://github.com/makektm/site-world.git
 cd site-world
 bun install
-bun run example:company   # ten microservices in four rooms, live (the screenshots above)
+bun run example:company   # the software factory, live (the screenshots above)
 bun run example           # the smallest world: one room, a door, a terminal, a pylon, and demons
 ```
 
 Both open at <http://localhost:5173>. Both use only the public API. The company example is also deployed
 as a live demo: <https://makektm.github.io/site-world/>.
 
-- [`examples/company/`](examples/company/) is a fictional company's ten microservices as a building:
-  a room per domain, a pylon per service (its height is traffic, its orbiting cubes are replicas, its
-  beacon is health), a live dashboard per room, the call graph overhead, and an on-call console.
-  [`services.ts`](examples/company/src/services.ts) is the one file to replace with your own service
-  catalogue and metrics; [`serviceRoom.tsx`](examples/company/src/serviceRoom.tsx) turns a domain into a room.
+- [`examples/company/`](examples/company/) is a fictional company's software factory as a building:
+  a room per domain planned from its service catalogue, a pylon per service (its height is traffic, its
+  orbiting cubes are replicas, its beacon is health), agents and people at work, the factory hall,
+  the loading dock, a timeline, a tour and an on-call console.
+  [`factory/catalog.ts`](examples/company/src/factory/catalog.ts) is the file to replace with your own
+  services; [`plan.ts`](examples/company/src/plan.ts) turns it into a building.
 - [`examples/basic/`](examples/basic/) is the starter: start by reading
   [`notesRoom.tsx`](examples/basic/src/notesRoom.tsx) to see what a room is.
 
@@ -85,8 +119,10 @@ as a live demo: <https://makektm.github.io/site-world/>.
 | `<SiteWorld>` | The viewport: canvas, orbit/walk cameras, doors, rooms, terminals, the DOM layer for screens. |
 | **Rooms** (`defineRoom`) | One module = one room: `useModel` (data), `Scene` (3D), `Overlay` (DOM screen), `Colliders`, `prompt`. |
 | **Terminals** | A screen on a plinth. One slot powers at most one at a time; walking up never powers it, **E** (or a click in orbit) does. |
-| **Doors** | `SiteDoor` data → leaf, frame, walk-up trigger, collider box. Slide or bi-parting. |
+| **Doors** | `SiteDoor` data → leaf, frame, walk-up trigger, collider box. Slide or bi-parting; brushed steel, or `doorStyle="plain"` for a flat slab, no frame, that costs no textures or lights. |
 | **Walk mode** | Capsule physics on an octree: crouch, jump, coyote time, ramps, a kill plane with checkpoints. |
+| **Layout** | `layoutCatalog`: a building planned from your domains and services. |
+| **Kit** | Agents, people, the work line, tanks, queues, the dock, and the interactions above (inspect, layers, go-to, follow, timeline, tours). |
 | **Doom** | A small, optional demon shooter that runs in your world's floor plan. |
 
 ## Terminals
@@ -127,6 +163,7 @@ Start with [`AGENTS.md`](AGENTS.md) (humans: it is also the contributor map), th
 - [`docs/GUIDE-first-world.md`](docs/GUIDE-first-world.md) — build a world from nothing.
 - [`docs/GUIDE-add-a-room.md`](docs/GUIDE-add-a-room.md) — add a terminal / board room.
 - [`docs/GUIDE-add-a-door.md`](docs/GUIDE-add-a-door.md) — add a door.
+- [`docs/GUIDE-kit.md`](docs/GUIDE-kit.md) — agents, work, infra and the interactions.
 - [`docs/GUIDE-doom.md`](docs/GUIDE-doom.md) — wire up (or leave out) the game.
 - [`docs/REFERENCE.md`](docs/REFERENCE.md) — every export, one line each (generated; CI keeps it current).
 

@@ -7,18 +7,18 @@ import { QuadraticBezierLine } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { AdditiveBlending, QuadraticBezierCurve3, Vector3, type Sprite } from "three";
 import { PAPER_DIM, WALL, getGlowTexture } from "site-world";
+import type { Feed } from "./liveFeed";
 import { HEALTH_COLOR } from "./serviceRoom";
-import { CALLS, byName, type Feed } from "./services";
 
 const ARC_Y = WALL + 0.5;
 const PULSES = 3;
 
-function Arc({ from, to, feed }: { from: string; to: string; feed: Feed }) {
-  const a = byName.get(from)!;
-  const b = byName.get(to)!;
+type FloorPos = readonly [number, number];
+
+function Arc({ from, to, a, b, feed }: { from: string; to: string; a: FloorPos; b: FloorPos; feed: Feed }) {
   const curve = useMemo(() => {
-    const start = new Vector3(a.at[0], ARC_Y, a.at[1]);
-    const end = new Vector3(b.at[0], ARC_Y, b.at[1]);
+    const start = new Vector3(a[0], ARC_Y, a[1]);
+    const end = new Vector3(b[0], ARC_Y, b[1]);
     const mid = start.clone().lerp(end, 0.5);
     mid.y += start.distanceTo(end) * 0.28;
     return new QuadraticBezierCurve3(start, mid, end);
@@ -57,12 +57,23 @@ function Arc({ from, to, feed }: { from: string; to: string; feed: Feed }) {
   );
 }
 
-export function Traffic({ feed }: { feed: Feed }) {
+export interface TrafficProps {
+  /** [caller, callee] pairs. A call whose either end has no slot (or no metrics) is skipped. */
+  calls: readonly (readonly [string, string])[];
+  /** Where each service stands, by name: the plan's slotByName. */
+  slots: Readonly<Record<string, { pos: FloorPos }>>;
+  feed: Feed;
+}
+
+export function Traffic({ calls, slots, feed }: TrafficProps) {
   return (
     <>
-      {CALLS.map(([from, to]) => (
-        <Arc key={`${from}>${to}`} from={from} to={to} feed={feed} />
-      ))}
+      {calls.map(([from, to]) => {
+        const a = slots[from];
+        const b = slots[to];
+        if (!a || !b || !feed[from] || !feed[to]) return null;
+        return <Arc key={`${from}>${to}`} from={from} to={to} a={a.pos} b={b.pos} feed={feed} />;
+      })}
     </>
   );
 }

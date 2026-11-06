@@ -61,9 +61,18 @@ export function WalkColliders({
   );
 }
 
+/** A host's request to put the walker somewhere: stand at `at` ([x, z]) and
+ * face `lookAt`. `seq` identifies the request — a new number replants again,
+ * the same number does nothing, so a host can keep the object in state. */
+export interface WalkTo {
+  at: readonly [number, number];
+  lookAt: readonly [number, number, number];
+  seq: number;
+}
+
 export function WalkRig({
   enabled, cylinders, doors, doorsOpen, solids,
-  checkpoint,
+  checkpoint, walkTo = null,
 }: {
   enabled: boolean;
   cylinders: readonly RoundSolid[];
@@ -78,6 +87,9 @@ export function WalkRig({
    * way, and it defaults to wherever walk mode was entered until one is
    * ever set. */
   checkpoint?: [number, number] | null;
+  /** Replant the walker (a go-to while walking). Applied when `seq` changes,
+   * and on entering walk mode while one is held. */
+  walkTo?: WalkTo | null;
 }) {
   const keys = useRef<Record<string, boolean>>({});
   const verticalVelocity = useRef(0);
@@ -201,6 +213,27 @@ export function WalkRig({
     groundedUntil.current = 0;
     respawnPos.current.set(camera.position.x, PLAYER_RADIUS, camera.position.z);
   }, [enabled, camera, capsule]);
+
+  // A host's go-to: same replant as entering walk mode, at the requested
+  // spot. Declared after the entry replant so that, on the same commit, it
+  // wins over walkStart. The respawn point moves with it — a fall right after
+  // a go-to returns the walker to where they were put, not to walkStart.
+  const walkToSeq = walkTo?.seq;
+  useEffect(() => {
+    if (!enabled || !walkTo) return;
+    const [x, z] = walkTo.at;
+    camera.position.set(x, EYE, z);
+    camera.lookAt(walkTo.lookAt[0], walkTo.lookAt[1], walkTo.lookAt[2]);
+    capsule.start.set(x, PLAYER_RADIUS, z);
+    capsule.end.set(x, EYE, z);
+    stance.current.eye = EYE;
+    verticalVelocity.current = 0;
+    playerOnFloor.current = false;
+    jumpBufferedUntil.current = 0;
+    groundedUntil.current = 0;
+    respawnPos.current.set(x, PLAYER_RADIUS, z);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `walkToSeq` stands for the request
+  }, [enabled, walkToSeq, camera, capsule]);
 
   // A nearer checkpoint moves the respawn target forward; it never moves
   // backward on its own (leaving the area a checkpoint covers should not
